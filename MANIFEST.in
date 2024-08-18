@@ -1,0 +1,7 @@
+include LICENSE
+include README.rst
+
+recursive-include referrals/migrations *
+recursive-include referrals/dtos *
+recursive-include referrals/repositories *
+recursive-include referrals/services *
