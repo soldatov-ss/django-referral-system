@@ -22,10 +22,6 @@ db.sqlite3-journal
 media/
 staticfiles/
 
-# If using the Django migrations:
-migrations/
-*/migrations/*
-
 # Pytest cache directory
 .pytest_cache/
 
