@@ -172,30 +172,3 @@ class ReferralProgramViewSet(
         promoter.link_clicked = promoter.link_clicked + 1
         promoter.save()
         return Response({"message": "Link clicked count incremented successfully"}, status=status.HTTP_200_OK)
-
-    # TODO: implement? how to resolve tasks in package?
-    # @action(
-    #     detail=False,
-    #     methods=["POST"],
-    #     permission_classes=[permissions.IsAuthenticated],
-    #     url_path="send-referral-by-email",
-    # )
-    # def send_referral_by_email(self, request, *args, **kwargs):
-    #     emails: list[str] = request.data.get("emails")
-    #
-    #     if not emails:
-    #         return Response({"detail": "No emails provided."}, status=HTTP_400_BAD_REQUEST)
-    #
-    #     try:
-    #         validate_user_daily_email_restriction(request.user, len(emails))
-    #         send_referral_invitation_email_task.delay(
-    #             emails, request.user.promoter.referral_link, request.user.get_full_name()
-    #         )
-    #         logger.info("Sent referral email from {} to {}".format(self.request.user.id, ", ".join(emails)))
-    #     except ValidationError as e:
-    #         logger.error(f"Error due to exceeding the daily limit value: {str(e)}")
-    #         return Response({"detail": e}, status=status.HTTP_429_TOO_MANY_REQUESTS)
-    #     except Exception as e:
-    #         logger.error("Error sending invitation emails: {}", str(e))
-    #         return Response({"detail": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-    #     return Response(status=HTTP_200_OK)

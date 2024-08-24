@@ -8,9 +8,11 @@ from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMessage
 from django.db import transaction
+from django.template.exceptions import TemplateDoesNotExist
 from django.template.loader import get_template
 
 from referrals.choices import ReferralStateChoices
+from referrals.config import config
 from referrals.models import PromoterCommission, Promoter
 from referrals.serializers import PromoterCommissionSerializer
 # from ..services.promoter_payout_service import promoter_payout_service
@@ -21,30 +23,44 @@ logger = logging.getLogger(__name__)
 
 class ReferralService:
     @staticmethod
-    def send_referral_invitation_email(base_email: str, emails_to: list[str], invitation_link: str,
-                                       promoter_full_name: str):
+    def send_referral_invitation_email(emails_to: list[str], invitation_link: str,
+                                       promoter_full_name: str, subject: str, template_path: str,
+                                       from_email: str = config.BASE_EMAIL) -> bool:
         """
-        Sends an HTML email with an invitation link to the specified email address.
+        Sends an HTML email with an invitation link to the specified email addresses.
+
+        :param emails_to: List of email addresses to send the invitation to.
+        :param invitation_link: The referral invitation link.
+        :param promoter_full_name: Full name of the promoter.
+        :param subject: Subject of the email.
+        :param template_path: Path to the HTML template for the email.
+        :param from_email: The email address that will appear in the 'from' field.
+
+        :return: True if the email was sent successfully, False otherwise.
         """
-        # TODO: configure subject, from email
-        subject = "{} has invited you to join Cryptonary".format(promoter_full_name)
         invitation_link = append_query_params(invitation_link, {"ref-source": "email"})
         html_template_context = {
             "link": invitation_link,
             "promoter_full_name": promoter_full_name,
         }
-        html_template = "referral_email_template.html"
-        email_message = get_template(html_template).render(html_template_context)
 
-        email = EmailMessage(
-            subject,
-            body=email_message,
-            # from_email=api_settings.MAGIC_LINKS_EMAIL_FROM_ADDRESS,
-            from_email=base_email,
-            to=emails_to,
-        )
-        email.content_subtype = "html"
-        email.send()
+        try:
+            template = get_template(template_path)
+            email_message = template.render(html_template_context)
+
+            email = EmailMessage(
+                subject,
+                body=email_message,
+                from_email=from_email,
+                to=emails_to,
+            )
+            email.content_subtype = "html"
+            email.send()
+            logging.info(f"Referral invitation email sent to {emails_to}")
+            return True
+        except TemplateDoesNotExist:
+            logging.error(f"Template '{template_path}' does not exist.")
+            return False
 
     @staticmethod
     def get_user_earnings(user: User):
