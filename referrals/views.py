@@ -69,7 +69,7 @@ class ReferralProgramViewSet(
         serializer = PromoterSerializer(promoter)
         return Response(serializer.data)
 
-    @action(detail=False, methods=["PATCH"], url_path="payout-method")
+    @action(detail=False, methods=["PATCH"], url_path="set-payout-method")
     def set_payout_method(self, request, *args, **kwargs):
         promoter = request.user.promoter
 
