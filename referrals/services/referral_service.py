@@ -92,7 +92,6 @@ class ReferralService:
         """
         Generate a unique referral link with a referral token.
         """
-        # TODO: APPSFLYER_BASE_LINK was as param
         return append_query_params(base_referral_link, {"ref": referral_token})
 
     @staticmethod
