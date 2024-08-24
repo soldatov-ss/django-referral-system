@@ -12,11 +12,6 @@ class InvitationMethodChoices(models.TextChoices):
     LINK = "link"
 
 
-class PayoutMethodChoices(models.TextChoices):
-    WISE = "wise"
-    CRYPTO = "crypto"
-
-
 class PromoterCommissionStatusChoices(models.TextChoices):
     PENDING = "pending"
     PAID = "paid"

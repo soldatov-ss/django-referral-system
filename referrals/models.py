@@ -8,7 +8,7 @@ from django.db.models import Sum
 from django.utils import timezone
 from django.utils.functional import cached_property
 
-from referrals.choices import PayoutMethodChoices, InvitationMethodChoices, ReferralStateChoices, \
+from referrals.choices import InvitationMethodChoices, ReferralStateChoices, \
     PromoterCommissionStatusChoices
 
 
@@ -55,7 +55,7 @@ class ReferralProgram(TimeStampedModel):
 
 
 class PayoutMethod(models.Model):
-    method = models.CharField(max_length=10, choices=PayoutMethodChoices.choices)
+    method = models.CharField(max_length=20, help_text="Payout method (e.g., wise, crypto, etc.)")
     payment_address = models.CharField(max_length=100, help_text="Payment address (email or solana wallet)")
 
     def __str__(self):
@@ -128,11 +128,11 @@ class PromoterCommission(TimeStampedModel):
         max_length=10, choices=PromoterCommissionStatusChoices.choices, default=PromoterCommissionStatusChoices.PENDING
     )
     failure_reason = models.TextField(null=True, blank=True)
-    invoice_external_id = models.CharField(null=True, max_length=255, blank=True, help_text="Chargebee invoice ID")
+    invoice_external_id = models.CharField(null=True, max_length=255, blank=True, help_text="e.g. Chargebee invoice ID")
 
 
 class PromoterPayout(TimeStampedModel):
     promoter = models.ForeignKey(Promoter, related_name="promoter_payouts", on_delete=models.CASCADE)
     amount = models.IntegerField()
-    payout_method = models.CharField(max_length=10, choices=PayoutMethodChoices.choices, null=False)
+    payout_method = models.CharField(max_length=20, null=False, help_text="Payout method (e.g., wise, crypto, etc.)")
     tx_signature = models.CharField(max_length=255, null=True, blank=True)
