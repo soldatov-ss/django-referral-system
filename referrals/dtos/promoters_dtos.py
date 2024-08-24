@@ -41,7 +41,6 @@ class ReferralDTO(BaseModelDTO):
     email: str
     promotion: PromotionDTO
     promoter: PromoterDTO
-    nickname: str | None = None
 
 
 class ReferralListDTO(BaseModelDTO):

@@ -36,7 +36,6 @@ class PromoterCommissionSerializer(CamelCaseSerializer):
 
 
 class ReferralSerializer(CamelCaseSerializer):
-    nickname = serializers.SerializerMethodField()
     email = serializers.SerializerMethodField()
     user_id = serializers.SerializerMethodField()
     commission_amount = serializers.SerializerMethodField()
@@ -46,7 +45,6 @@ class ReferralSerializer(CamelCaseSerializer):
         model = Referral
         fields = (
             "user_id",
-            "nickname",
             "email",
             "status",
             "invitation_method",
@@ -54,9 +52,6 @@ class ReferralSerializer(CamelCaseSerializer):
             "commission_amount",
             "commission_status",
         )
-
-    def get_nickname(self, obj):
-        return obj.user.nickname
 
     def get_email(self, obj):
         return obj.user.email
