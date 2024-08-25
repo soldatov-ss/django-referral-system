@@ -7,10 +7,11 @@ from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 
 from referrals.choices import InvitationMethodChoices, ReferralStateChoices
+from referrals.config import config
 from referrals.exceptions import ViewException
 from referrals.models import ReferralProgram, Promoter, Referral, PromoterPayout, PromoterCommission
 from referrals.serializers import ReferralSerializer, PromoterSerializer, PromoterPayoutsSerializer
-from referrals.services import referral_service
+from referrals.services import referral_service, promoter_service
 
 
 class ReferralProgramViewSetTestCase(APITestCase):
@@ -307,3 +308,36 @@ class ReferralServiceTestCase(TestCase):
         Promoter.objects.all().delete()
         Referral.objects.all().delete()
         PromoterCommission.objects.all().delete()
+
+
+class PromoterServiceTestCase(TestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.user = User.objects.create_user(username='test-user', email='test@example.com', password='Password123')
+
+    def test_create_new_promoter(self):
+        promoter = promoter_service.create_new_promoter(user=self.user)
+
+        self.assertIsNotNone(promoter)
+        self.assertEqual(promoter.user, self.user)
+        self.assertTrue(len(promoter.referral_token) > 0)
+        self.assertTrue(promoter.referral_link.startswith(config.BASE_EMAIL))
+
+        self.assertTrue(Promoter.objects.filter(user=self.user).exists())
+
+    def test_get_or_create_promoter_existing(self):
+        existing_promoter = Promoter.objects.create(
+            user=self.user,
+            referral_token='existing-token',
+            referral_link='http://example.com/referral?ref=existingtoken'
+        )
+
+        promoter = promoter_service.get_or_create_promoter(user=self.user)
+
+        self.assertEqual(promoter, existing_promoter)
+        self.assertTrue(Promoter.objects.filter(user=self.user).exists())
+
+    @classmethod
+    def tearDownClass(cls):
+        Promoter.objects.all().delete()
+        User.objects.all().delete()
