@@ -20,25 +20,37 @@ class ReferralProgramViewSetTestCase(APITestCase):
                                                                is_active=True, min_withdrawal_balance=10)
         self.user = User.objects.create_user(username='test-user', email='test@example.com', password='Password123')
         self.user2 = User.objects.create_user(username='test-user2', email='test2@example.com', password='Password321')
+        self.user3 = User.objects.create_user(username='test-user3', email='test3@example.com', password='Password121')
+        self.user4 = User.objects.create_user(username='test-user4', email='test4@example.com', password='Password111')
 
         self.promoter = Promoter.objects.create(user=self.user, referral_token='test-token')
 
+        self.referral = Referral.objects.create(
+            user=self.user2,
+            promoter=self.promoter,
+            status=ReferralStateChoices.ACTIVE
+        )
+        self.referral2 = Referral.objects.create(
+            user=self.user3,
+            promoter=self.promoter,
+            status=ReferralStateChoices.ACTIVE
+        )
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
     def test_create_referral_success(self):
         url = reverse('referrals-list')
         data = {
-            "email": self.user2.email,
+            "email": self.user4.email,
             "referral_token": "test-token",
             "referral_source": InvitationMethodChoices.EMAIL.value,
         }
 
         response = self.client.post(url, data, format='json')
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(Referral.objects.filter(user=self.user2).exists())
+        self.assertTrue(Referral.objects.filter(user=self.user4).exists())
 
-        referral = Referral.objects.get(user=self.user2)
+        referral = Referral.objects.get(user=self.user4)
         self.assertEqual(referral.promoter, self.promoter)
         self.assertEqual(referral.invitation_method, InvitationMethodChoices.EMAIL.value)
         self.assertEqual(referral.status, ReferralStateChoices.SIGNUP.value)
@@ -59,7 +71,7 @@ class ReferralProgramViewSetTestCase(APITestCase):
     def test_create_referral_invalid_token(self):
         url = reverse('referrals-list')
         data = {
-            "email": self.user2.email,
+            "email": self.user4.email,
             "referral_token": "invalid-token",  # Invalid token
             "referral_source": InvitationMethodChoices.LINK.value,
         }
@@ -67,24 +79,9 @@ class ReferralProgramViewSetTestCase(APITestCase):
         response = self.client.post(url, data, format='json')
 
         self.assertEqual(response.status_code, status.HTTP_404_NOT_FOUND)
-        self.assertFalse(Referral.objects.filter(user=self.user2).exists())
+        self.assertFalse(Referral.objects.filter(user=self.user4).exists())
 
     def test_list_referrals(self):
-        self.referral1 = Referral.objects.create(
-            user=self.user,
-            promoter=self.promoter,
-            invitation_method=InvitationMethodChoices.EMAIL,
-            status=ReferralStateChoices.ACTIVE,
-            commission_rate=5.00
-        )
-        self.referral2 = Referral.objects.create(
-            user=self.user2,
-            promoter=self.promoter,
-            invitation_method=InvitationMethodChoices.LINK,
-            status=ReferralStateChoices.REFUND,
-            commission_rate=7.50
-        )
-
         url = reverse('referrals-list')
         response = self.client.get(url)
 
@@ -92,7 +89,7 @@ class ReferralProgramViewSetTestCase(APITestCase):
         self.assertIn("results", response.data)
         self.assertIsInstance(response.data["results"], list)
 
-        expected_data = ReferralSerializer([self.referral1, self.referral2], many=True).data
+        expected_data = ReferralSerializer([self.referral, self.referral2], many=True).data
 
         response_data_sorted = sorted(response.data["results"], key=lambda x: x['userId'])
         expected_data_sorted = sorted(expected_data, key=lambda x: x['userId'])
@@ -220,12 +217,68 @@ class ReferralProgramViewSetTestCase(APITestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data, [])
 
+    def test_promoter_recent_earnings(self):
+        seven_days_ago = datetime.today().date() - timedelta(days=6)
+        PromoterCommission.objects.create(promoter=self.promoter, amount=100, referral=self.referral,
+                                          created=seven_days_ago)
+        PromoterCommission.objects.create(promoter=self.promoter, amount=200, referral=self.referral2,
+                                          created=datetime.today())
+
+        url = reverse('referrals-promoter-recent-earnings')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
+        self.assertEqual(len(response.data), 7)
+
+        total_earnings = sum(item['value'] for item in response.data)
+        self.assertEqual(total_earnings, 300)
+
+    def test_promoter_recent_earnings_no_data(self):
+        url = reverse('referrals-promoter-recent-earnings')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
+        self.assertEqual(len(response.data), 7)
+
+        # Check that all values are 0 when there's no data
+        for day_data in response.data:
+            self.assertEqual(day_data['value'], 0)
+
+    def test_promoter_payment_history(self):
+        payout1 = PromoterPayout.objects.create(
+            promoter=self.promoter, amount=100, payout_method="wise", tx_signature="tx123"
+        )
+        payout2 = PromoterPayout.objects.create(
+            promoter=self.promoter, amount=200, payout_method="crypto", tx_signature="tx456"
+        )
+
+        url = reverse('referrals-promoter-payment-history')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
+        self.assertEqual(len(response.data), 2)
+
+        self.assertEqual(response.data[0]['amount'], 200)
+        self.assertEqual(response.data[1]['amount'], 100)
+
+    def test_promoter_payment_history_no_data(self):
+        url = reverse('referrals-promoter-payment-history')
+        response = self.client.get(url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIsInstance(response.data, list)
+        self.assertEqual(len(response.data), 0)
+
     def tearDown(self):
-        User.objects.all().delete()
         ReferralProgram.objects.all().delete()
         Promoter.objects.all().delete()
         Referral.objects.all().delete()
         PromoterPayout.objects.all().delete()
+        PromoterCommission.objects.all().delete()
+        User.objects.all().delete()
 
 
 class ReferralServiceTestCase(TestCase):
