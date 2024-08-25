@@ -1,12 +1,16 @@
+from datetime import datetime, timedelta
+
 from django.contrib.auth.models import User
+from django.test import TestCase
 from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 
 from referrals.choices import InvitationMethodChoices, ReferralStateChoices
 from referrals.exceptions import ViewException
-from referrals.models import ReferralProgram, Promoter, Referral, PromoterPayout
+from referrals.models import ReferralProgram, Promoter, Referral, PromoterPayout, PromoterCommission
 from referrals.serializers import ReferralSerializer, PromoterSerializer, PromoterPayoutsSerializer
+from referrals.services import referral_service
 
 
 class ReferralProgramViewSetTestCase(APITestCase):
@@ -221,3 +225,85 @@ class ReferralProgramViewSetTestCase(APITestCase):
         Promoter.objects.all().delete()
         Referral.objects.all().delete()
         PromoterPayout.objects.all().delete()
+
+
+class ReferralServiceTestCase(TestCase):
+    def setUp(self):
+        self.referral_program = ReferralProgram.objects.create(name='test_program', commission_rate=20.00,
+                                                               is_active=True, min_withdrawal_balance=10)
+        self.user = User.objects.create_user(username='test-user', email='test@example.com', password='Password123')
+        self.user2 = User.objects.create_user(username='test-user2', email='test2@example.com', password='Password321')
+        self.user3 = User.objects.create_user(username='test-user3', email='test3@example.com', password='Password121')
+
+        self.promoter = Promoter.objects.create(user=self.user, referral_token='test-token')
+        self.referral = Referral.objects.create(
+            user=self.user2,
+            promoter=self.promoter,
+            status=ReferralStateChoices.SIGNUP
+        )
+        self.referral2 = Referral.objects.create(
+            user=self.user3,
+            promoter=self.promoter,
+            status=ReferralStateChoices.SIGNUP
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_get_user_earnings(self):
+        seven_days_ago = datetime.today().date() - timedelta(days=6)
+        PromoterCommission.objects.create(promoter=self.promoter, referral=self.referral, amount=100,
+                                          created=seven_days_ago)
+        PromoterCommission.objects.create(promoter=self.promoter, referral=self.referral2, amount=200,
+                                          created=datetime.today())
+
+        earnings = referral_service.get_user_earnings(self.user)
+        self.assertEqual(len(earnings), 2)
+        self.assertEqual(earnings[0]['amount'], 100)
+        self.assertEqual(earnings[1]['amount'], 200)
+
+    def test_aggregate_earnings_by_day(self):
+        earnings = [
+            {"created": datetime.today().strftime("%Y-%m-%dT%H:%M:%S.%fZ"), "amount": 100},
+            {"created": (datetime.today() - timedelta(days=1)).strftime("%Y-%m-%dT%H:%M:%S.%fZ"), "amount": 200},
+        ]
+        aggregated_earnings = referral_service.aggregate_earnings_by_day(earnings)
+        today = datetime.today().strftime("%a")
+        yesterday = (datetime.today() - timedelta(days=1)).strftime("%a")
+
+        self.assertEqual(aggregated_earnings[today], 100)
+        self.assertEqual(aggregated_earnings[yesterday], 200)
+
+    def test_generate_referral_token(self):
+        referral_token = referral_service.generate_referral_token(self.user.id)
+        self.assertEqual(len(referral_token), 10)
+
+    def test_get_referrer_by_user_id(self):
+        referrer = referral_service.get_referrer_by_user_id(self.user2.id)
+        self.assertEqual(referrer, self.promoter)
+
+    def test_handle_purchase_subscription(self):
+        self.referral.status = ReferralStateChoices.SIGNUP
+        self.referral.save()
+
+        result = referral_service.handle_purchase_subscription(self.user2, invoice={})
+        self.referral.refresh_from_db()
+
+        self.assertEqual(result, True)
+        self.assertEqual(self.referral.status, ReferralStateChoices.ACTIVE)
+
+    def test_handle_user_refund(self):
+        self.referral.status = ReferralStateChoices.ACTIVE
+        self.referral.save()
+
+        result = referral_service.handle_user_refund(self.user2, amount_refunded=100, invoice={})
+        self.referral.refresh_from_db()
+
+        self.assertEqual(result, True)
+        self.assertEqual(self.referral.status, ReferralStateChoices.REFUND)
+
+    def tearDown(self):
+        User.objects.all().delete()
+        ReferralProgram.objects.all().delete()
+        Promoter.objects.all().delete()
+        Referral.objects.all().delete()
+        PromoterCommission.objects.all().delete()

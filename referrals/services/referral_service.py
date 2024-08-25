@@ -125,7 +125,7 @@ class ReferralService:
             return None
 
     @staticmethod
-    def handle_purchase_subscription(user: User, invoice: dict):
+    def handle_purchase_subscription(user: User, invoice: dict) -> bool:
         """
         Handles the process of updating a referral subscription status to 'Active'
         when a subscription is created for a referred user.
@@ -139,12 +139,14 @@ class ReferralService:
                 logger.info(f"User {user.email} became an active referral of {promoter.user.email}")
                 # TODO: finish implementing
                 # promoter_payout_service.calculate_commission(user.id, invoice)
+                return True
         except ObjectDoesNotExist:
             logger.error(f"User with ID {user.id} has no referral associated.")
+            return False
 
     @staticmethod
     @transaction.atomic
-    def handle_user_refund(user: User, amount_refunded: int, invoice: dict):
+    def handle_user_refund(user: User, amount_refunded: int, invoice: dict) -> bool:
         """
         Handles the process of refunding a referred user's subscription.
         """
@@ -157,9 +159,10 @@ class ReferralService:
                 # TODO: finish implementing
                 # promoter_payout_service.calculate_refund(user.referral, amount_refunded, invoice)
                 logger.info(f"User {user.email} has been refunded {amount_refunded}.")
-
+                return True
         except ObjectDoesNotExist:
             logger.error(f"User with ID {user.id} has no referral associated.")
+            return False
 
 
 referral_service = ReferralService()
