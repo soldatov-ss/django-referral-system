@@ -374,7 +374,7 @@ class PromoterServiceTestCase(TestCase):
         self.assertIsNotNone(promoter)
         self.assertEqual(promoter.user, self.user)
         self.assertTrue(len(promoter.referral_token) > 0)
-        self.assertTrue(promoter.referral_link.startswith(config.BASE_EMAIL))
+        self.assertTrue(promoter.referral_link.startswith(config.BASE_REFERRAL_LINK))
 
         self.assertTrue(Promoter.objects.filter(user=self.user).exists())
 
