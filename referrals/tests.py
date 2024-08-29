@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.test import TestCase
@@ -282,8 +283,11 @@ class ReferralProgramViewSetTestCase(APITestCase):
 
 
 class ReferralServiceTestCase(TestCase):
+    commission_rate = 20.00
+
     def setUp(self):
-        self.referral_program = ReferralProgram.objects.create(name='test_program', commission_rate=20.00,
+        self.referral_program = ReferralProgram.objects.create(name='test_program',
+                                                               commission_rate=self.commission_rate,
                                                                is_active=True, min_withdrawal_balance=10)
         self.user = User.objects.create_user(username='test-user', email='test@example.com', password='Password123')
         self.user2 = User.objects.create_user(username='test-user2', email='test2@example.com', password='Password321')
@@ -339,11 +343,21 @@ class ReferralServiceTestCase(TestCase):
         self.referral.status = ReferralStateChoices.SIGNUP
         self.referral.save()
 
-        result = referral_service.handle_purchase_subscription(self.user2, invoice={})
+        amount_paid = 15000  # amount in cents
+
+        result = referral_service.handle_purchase_subscription(self.user2, amount_paid)
         self.referral.refresh_from_db()
 
         self.assertEqual(result, True)
         self.assertEqual(self.referral.status, ReferralStateChoices.ACTIVE)
+
+        commission = PromoterCommission.objects.filter(referral=self.referral).first()
+        expected_commission_amount = Decimal(amount_paid * (self.commission_rate / 100) / 100)
+
+        self.assertIsNotNone(commission)
+        self.assertEqual(commission.amount, expected_commission_amount)
+        self.assertEqual(commission.promoter, self.promoter)
+        self.assertEqual(commission.referral, self.referral)
 
     def test_handle_user_refund(self):
         self.referral.status = ReferralStateChoices.ACTIVE

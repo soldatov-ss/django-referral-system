@@ -15,7 +15,7 @@ from referrals.choices import ReferralStateChoices
 from referrals.config import config
 from referrals.models import PromoterCommission, Promoter
 from referrals.serializers import PromoterCommissionSerializer
-# from ..services.promoter_payout_service import promoter_payout_service
+from referrals.services.promoter_payout_service import promoter_payout_service
 from referrals.utils import append_query_params
 
 logger = logging.getLogger(__name__)
@@ -125,7 +125,9 @@ class ReferralService:
             return None
 
     @staticmethod
-    def handle_purchase_subscription(user: User, invoice: dict) -> bool:
+    def handle_purchase_subscription(user: User,
+                                     amount_paid: int,
+                                     invoice_external_id: Optional[int] = None) -> Optional[PromoterCommission]:
         """
         Handles the process of updating a referral subscription status to 'Active'
         when a subscription is created for a referred user.
@@ -136,13 +138,11 @@ class ReferralService:
             if user.referral.status == ReferralStateChoices.SIGNUP:
                 user.referral.status = ReferralStateChoices.ACTIVE
                 user.referral.save()
+                commission = promoter_payout_service.calculate_commission(user.id, amount_paid, invoice_external_id)
                 logger.info(f"User {user.email} became an active referral of {promoter.user.email}")
-                # TODO: finish implementing
-                # promoter_payout_service.calculate_commission(user.id, invoice)
-                return True
+                return commission
         except ObjectDoesNotExist:
             logger.error(f"User with ID {user.id} has no referral associated.")
-            return False
 
     @staticmethod
     @transaction.atomic
