@@ -6,6 +6,8 @@ from typing import Optional
 import pandas as pd
 from pydantic import BaseModel
 
+from referrals.choices import PromoterCommissionStatusChoices
+from referrals.exceptions import ViewException
 from referrals.helpers import parse_df_to_csv_string_without_index_col
 from referrals.models import Promoter, PromoterPayout, PromoterCommission, Referral
 from referrals.repositories import promoter_repository, promoter_payout_repository, promoter_commission_repository, \
@@ -97,6 +99,29 @@ class PromoterPayoutService:
             payout_method=payout_method,
         )
         PromoterCommission.objects.filter(promoter=promoter, status="pending").update(status="paid")
+
+    @staticmethod
+    def calculate_refund(referral: Referral, amount_refunded: int, amount_paid: int,
+                         invoice_external_id: Optional[int] = None) -> PromoterCommission:
+        referral_commission = promoter_commission_repository.get_referral_positive_commission(referral)
+        if not referral_commission:
+            raise ViewException(
+                f"No commission found for referral with id {referral.id}.",
+                status_code=404
+            )
+
+        commission_paid = referral_commission.amount
+        commission_refund_amount = -math.floor(commission_paid * amount_refunded / amount_paid)
+
+        commission = PromoterCommission(
+            promoter=referral.promoter,
+            referral=referral,
+            amount=commission_refund_amount,
+            status=PromoterCommissionStatusChoices.REFUND,
+            invoice_external_id=invoice_external_id,
+        )
+        commission.save()
+        return commission
 
 
 promoter_payout_service = PromoterPayoutService()

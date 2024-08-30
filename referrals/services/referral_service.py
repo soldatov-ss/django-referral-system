@@ -146,7 +146,8 @@ class ReferralService:
 
     @staticmethod
     @transaction.atomic
-    def handle_user_refund(user: User, amount_refunded: int, invoice: dict) -> bool:
+    def handle_user_refund(user: User, amount_refunded: int, amount_paid: int,
+                           invoice_external_id: Optional[int] = None) -> Optional[PromoterCommission]:
         """
         Handles the process of refunding a referred user's subscription.
         """
@@ -156,13 +157,12 @@ class ReferralService:
             if user.referral.status == ReferralStateChoices.ACTIVE:
                 user.referral.status = ReferralStateChoices.REFUND
                 user.referral.save()
-                # TODO: finish implementing
-                # promoter_payout_service.calculate_refund(user.referral, amount_refunded, invoice)
+                commission = promoter_payout_service.calculate_refund(user.referral, amount_refunded, amount_paid,
+                                                                      invoice_external_id)
                 logger.info(f"User {user.email} has been refunded {amount_refunded}.")
-                return True
+                return commission
         except ObjectDoesNotExist:
             logger.error(f"User with ID {user.id} has no referral associated.")
-            return False
 
 
 referral_service = ReferralService()

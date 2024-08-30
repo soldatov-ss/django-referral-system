@@ -1,8 +1,8 @@
 import logging
 
-from referrals.repositories.base_repository import BaseRepository
 from referrals.choices import PromoterCommissionStatusChoices
 from referrals.models import Promoter, Referral, PromoterCommission
+from referrals.repositories.base_repository import BaseRepository
 
 logger = logging.getLogger(__name__)
 
@@ -20,15 +20,11 @@ class PromoterCommissionRepository(BaseRepository):
             status=PromoterCommissionStatusChoices.FAILED.value, failure_reason=failure_reason
         )
 
-    def get_referral_positive_commission(self, referral: Referral, invoice_external_id: str = None):
+    def get_referral_positive_commission(self, referral: Referral):
         query = self.filter(
             referral=referral,
             status__in=[PromoterCommissionStatusChoices.PENDING, PromoterCommissionStatusChoices.PAID]
         )
-
-        if invoice_external_id:
-            query = query.filter(invoice_external_id=invoice_external_id)
-
         return query.first()
 
 
