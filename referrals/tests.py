@@ -1,3 +1,4 @@
+import math
 from datetime import datetime, timedelta
 from decimal import Decimal
 
@@ -7,12 +8,13 @@ from django.urls import reverse
 from rest_framework import status
 from rest_framework.test import APITestCase, APIClient
 
-from referrals.choices import InvitationMethodChoices, ReferralStateChoices
+from referrals.choices import InvitationMethodChoices, ReferralStateChoices, PromoterCommissionStatusChoices
 from referrals.config import config
 from referrals.exceptions import ViewException
 from referrals.models import ReferralProgram, Promoter, Referral, PromoterPayout, PromoterCommission
 from referrals.serializers import ReferralSerializer, PromoterSerializer, PromoterPayoutsSerializer
 from referrals.services import referral_service, promoter_service
+from referrals.services.promoter_payout_service import promoter_payout_service
 
 
 class ReferralProgramViewSetTestCase(APITestCase):
@@ -345,13 +347,10 @@ class ReferralServiceTestCase(TestCase):
 
         amount_paid = 15000  # amount in cents
 
-        result = referral_service.handle_purchase_subscription(self.user2, amount_paid)
+        commission = referral_service.handle_purchase_subscription(self.user2, amount_paid)
         self.referral.refresh_from_db()
 
-        self.assertEqual(result, True)
         self.assertEqual(self.referral.status, ReferralStateChoices.ACTIVE)
-
-        commission = PromoterCommission.objects.filter(referral=self.referral).first()
         expected_commission_amount = Decimal(amount_paid * (self.commission_rate / 100) / 100)
 
         self.assertIsNotNone(commission)
@@ -363,10 +362,21 @@ class ReferralServiceTestCase(TestCase):
         self.referral.status = ReferralStateChoices.ACTIVE
         self.referral.save()
 
-        result = referral_service.handle_user_refund(self.user2, amount_refunded=100, invoice={})
+        amount_paid = 15000  # amount in cents
+        amount_refunded = 5000  # amount refunded in cents
+
+        initial_commission = promoter_payout_service.create_commission(
+            referral=self.referral, amount_paid=amount_paid
+        )
+
+        result = referral_service.handle_user_refund(self.user2, amount_refunded=amount_refunded,
+                                                     amount_paid=amount_paid)
         self.referral.refresh_from_db()
 
-        self.assertEqual(result, True)
+        expected_refund_amount = -math.floor(initial_commission.amount * amount_refunded / amount_paid)
+
+        self.assertEqual(result.amount, expected_refund_amount)
+        self.assertEqual(result.status, PromoterCommissionStatusChoices.REFUND)
         self.assertEqual(self.referral.status, ReferralStateChoices.REFUND)
 
     def tearDown(self):
