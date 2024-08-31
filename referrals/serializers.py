@@ -72,7 +72,7 @@ class ReferralSerializer(CamelCaseSerializer):
         return None
 
 
-class PayoutMethodSerializer(serializers.ModelSerializer):
+class PayoutMethodSerializer(CamelCaseSerializer):
     class Meta:
         model = PayoutMethod
         fields = ["method", "payment_address"]
