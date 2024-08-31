@@ -22,6 +22,11 @@ logger = logging.getLogger(__name__)
 
 
 class ReferralService:
+    """
+    Service class that handles operations related to referral programs, including sending invitation emails,
+    managing user earnings, generating referral tokens and links, and handling subscriptions and refunds.
+    """
+
     @staticmethod
     def send_referral_invitation_email(emails_to: list[str], invitation_link: str,
                                        promoter_full_name: str, subject: str, template_path: str,
@@ -64,13 +69,36 @@ class ReferralService:
 
     @staticmethod
     def get_user_earnings(user: User):
+        """
+        Retrieves the earnings of a user within the last 7 days.
+
+        Filters the commissions associated with the user's promoter account that were created within
+        the last 7 days, serializes the data, and returns it.
+
+        Args:
+            user (User): The user whose earnings are to be retrieved.
+
+        Returns:
+            list[dict]: A list of serialized commission data for the user's earnings.
+        """
         seven_days_ago = datetime.today().date() - timedelta(days=6)
         earnings = PromoterCommission.objects.filter(promoter__user=user, created__gte=seven_days_ago)
         serializer = PromoterCommissionSerializer(earnings, many=True)
         return serializer.data
 
     @staticmethod
-    def aggregate_earnings_by_day(earnings):
+    def aggregate_earnings_by_day(earnings: list[dict]) -> dict[str, int]:
+        """
+        Aggregates earnings by the day of the week.
+
+        Processes a list of earnings, grouping the total earnings by the day of the week they were created.
+
+        Args:
+            earnings (list[dict]): A list of earnings with their creation dates.
+
+        Returns:
+            dict[str, int]: A dictionary mapping each day of the week to the total earnings for that day.
+        """
         earnings_by_day = defaultdict(int)
 
         for earning in earnings:
@@ -80,7 +108,19 @@ class ReferralService:
         return earnings_by_day
 
     @staticmethod
-    def get_last_7_days_earnings(earnings):
+    def get_last_7_days_earnings(earnings: list[dict]) -> list[dict]:
+        """
+        Retrieves the earnings statistics for the last 7 days.
+
+        Aggregates earnings data by the day of the week for the last 7 days, ensuring each day is represented
+        even if there were no earnings on that day.
+
+        Args:
+            earnings (list[dict]): A list of earnings with their creation dates.
+
+        Returns:
+            list[dict]: A list of dictionaries, each containing the day (as a string) and the corresponding earnings value.
+        """
         today = datetime.today()
         last_7_days = [(today - timedelta(days=i)).strftime("%a") for i in range(6, -1, -1)]
         earnings_by_day = ReferralService.aggregate_earnings_by_day(earnings)
@@ -131,6 +171,14 @@ class ReferralService:
         """
         Handles the process of updating a referral subscription status to 'Active'
         when a subscription is created for a referred user.
+
+        Args:
+            user (User): The user whose subscription is being handled.
+            amount_paid (int): The amount paid for the subscription in cents.
+            invoice_external_id (Optional[int]): An external ID for the invoice (optional).
+
+        Returns:
+            Optional[PromoterCommission]: The commission generated from the subscription, or None if no commission is generated.
         """
         try:
             user = User.objects.select_related("referral__promoter__user").filter(pk=user.id).first()
@@ -150,6 +198,17 @@ class ReferralService:
                            invoice_external_id: Optional[int] = None) -> Optional[PromoterCommission]:
         """
         Handles the process of refunding a referred user's subscription.
+
+        This method updates the user's referral status to 'Refund' and calculates the refund commission.
+
+        Args:
+            user (User): The user whose refund is being processed.
+            amount_refunded (int): The amount refunded in cents.
+            amount_paid (int): The original amount paid for the subscription in cents.
+            invoice_external_id (Optional[int]): An external ID for the invoice (optional).
+
+        Returns:
+            Optional[PromoterCommission]: The refund commission generated from the refund, or None if no commission is generated.
         """
         try:
             user = User.objects.select_related("referral__promoter__user").filter(pk=user.id).first()

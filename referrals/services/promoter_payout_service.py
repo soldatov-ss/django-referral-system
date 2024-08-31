@@ -27,7 +27,20 @@ class PromoterPayoutDataRow(BaseModel):
 
 
 class PromoterPayoutService:
-    def send_wise_csv_for_promoters_payouts(self, **kwargs):
+    def send_wise_csv_for_promoters_payouts(self, **kwargs) -> Optional[str]:
+        """
+        Generates a CSV file for Wise payouts and processes payouts for eligible promoters.
+
+        This method retrieves all promoters eligible for Wise payouts, generates the necessary
+        payout data, and creates payouts for those promoters whose current balance meets or exceeds
+        the minimum withdrawal balance. The resulting data is converted into a CSV format string.
+
+        Args:
+            **kwargs: Additional keyword arguments to pass to the `PromoterPayoutDataRow`.
+
+        Returns:
+            Optional[str]: A CSV formatted string containing payout data, or None if no data is available.
+        """
         promoters = promoter_repository.get_wise_payout_promoters()
 
         data = []
@@ -52,6 +65,20 @@ class PromoterPayoutService:
     def calculate_commission(self, user_id: int,
                              amount_paid: int,
                              invoice_external_id: Optional[int] = None) -> Optional[PromoterCommission]:
+        """
+        Calculates and creates a commission for a promoter based on the referral's payment.
+
+        This method checks if a commission has already been received for the given referral.
+        If not, it calculates the commission amount and creates a new `PromoterCommission` entry.
+
+        Args:
+            user_id (int): The ID of the user who made the payment.
+            amount_paid (int): The amount paid by the user in cents.
+            invoice_external_id (Optional[int]): An optional external invoice ID.
+
+        Returns:
+            Optional[PromoterCommission]: The created commission, or None if no commission was created.
+        """
         referral = referral_repository.get_referral_by_user_id(user_id)
         if not referral:
             return
@@ -73,6 +100,17 @@ class PromoterPayoutService:
     def create_commission(self, referral: Referral,
                           amount_paid: int,
                           invoice_external_id: Optional[int] = None) -> Optional[PromoterCommission]:
+        """
+        Creates a new commission entry for a promoter based on a referral's payment.
+
+        Args:
+            referral (Referral): The referral for which the commission is being created.
+            amount_paid (int): The amount paid by the user in cents.
+            invoice_external_id (Optional[int]): An optional external invoice ID.
+
+        Returns:
+            Optional[PromoterCommission]: The created commission, or None if no commission was created.
+        """
         commission_amount = self.calculate_commission_amount(amount_paid, referral.commission_rate)
 
         commission = PromoterCommission(
@@ -86,6 +124,16 @@ class PromoterPayoutService:
 
     @staticmethod
     def calculate_commission_amount(amount_paid: int, referral_commission_rate: Decimal) -> float:
+        """
+        Calculates the commission amount based on the payment amount and referral commission rate.
+
+        Args:
+            amount_paid (int): The amount paid by the user in cents.
+            referral_commission_rate (Decimal): The commission rate associated with the referral.
+
+        Returns:
+            float: The calculated commission amount.
+        """
         commission_rate = referral_commission_rate / 100
         price = amount_paid / 100
 
@@ -93,6 +141,17 @@ class PromoterPayoutService:
 
     @staticmethod
     def create_payout(promoter: Promoter, amount: float, payout_method):
+        """
+        Creates a payout record for a promoter and marks their pending commissions as paid.
+
+        Args:
+            promoter (Promoter): The promoter receiving the payout.
+            amount (float): The payout amount.
+            payout_method (str): The method used for the payout (e.g., 'wise', 'crypto').
+
+        Returns:
+            None
+        """
         PromoterPayout.objects.create(
             promoter=promoter,
             amount=amount,
@@ -103,6 +162,21 @@ class PromoterPayoutService:
     @staticmethod
     def calculate_refund(referral: Referral, amount_refunded: int, amount_paid: int,
                          invoice_external_id: Optional[int] = None) -> PromoterCommission:
+        """
+        Calculates the refund amount for a promoter's commission and creates a refund record.
+
+        Args:
+            referral (Referral): The referral associated with the refund.
+            amount_refunded (int): The amount refunded in cents.
+            amount_paid (int): The original amount paid in cents.
+            invoice_external_id (Optional[int]): An optional external invoice ID.
+
+        Returns:
+            PromoterCommission: The created refund commission entry.
+
+        Raises:
+            ViewException: If no positive commission is found for the referral.
+        """
         referral_commission = promoter_commission_repository.get_referral_positive_commission(referral)
         if not referral_commission:
             raise ViewException(

@@ -11,6 +11,10 @@ logger = logging.getLogger(__name__)
 
 
 class PromoterService:
+    """
+    Service class for managing Promoter-related operations.
+    """
+
     def create_new_promoter(self, user: User) -> Promoter:
         referral_token = referral_service.generate_referral_token(user_id=user.id)
         referral_link = referral_service.generate_referral_link(base_referral_link=config.BASE_REFERRAL_LINK,
