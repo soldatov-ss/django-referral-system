@@ -45,7 +45,6 @@ class ReferralProgramViewSet(
 ):
     pagination_class = ReferralsPagination
     serializer_class = ReferralSerializer
-    permission_classes = [permissions.IsAuthenticated]
 
     def get_permissions(self):
         allow_any_actions = ["create", "increment_link_clicked"]
