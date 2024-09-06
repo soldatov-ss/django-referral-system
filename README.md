@@ -3,6 +3,10 @@
 A Django app for managing referral programs, promoters, referrals, and tracking referral performance with features like
 commission setting, invitation management, and Wise payouts.
 
+## Documentation
+
+Full documentation is available at [Read the Docs](https://django-referral-system.readthedocs.io/en/latest/index.html).
+
 ## Features
 * **Promoter Management**: Easily create and manage promoters who can invite referrals to join your platform.
 * **Referral Tracking**: Promoters can track their list of referrals, including invitation details, sign-up status, and more.
