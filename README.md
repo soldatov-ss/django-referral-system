@@ -1,5 +1,7 @@
 # django-referral-system
 
+![Documentation Status](https://readthedocs.org/projects/django-referral-system/badge/?version=latest)
+
 A Django app for managing referral programs, promoters, referrals, and tracking referral performance with features like
 commission setting, invitation management, and Wise payouts.
 
