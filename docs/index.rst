@@ -13,6 +13,7 @@ Welcome to django-referral-system's documentation!
    installation
    getting_started
    promoter
+   referral
 
 
 Key Features
