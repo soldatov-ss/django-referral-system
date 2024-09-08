@@ -15,6 +15,7 @@ Welcome to django-referral-system's documentation!
    promoter
    referral
    referral_service
+   wise_payouts
 
 
 Key Features

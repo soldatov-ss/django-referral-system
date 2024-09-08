@@ -140,14 +140,14 @@ class PromoterPayoutService:
         return math.floor(Decimal(price) * commission_rate)
 
     @staticmethod
-    def create_payout(promoter: Promoter, amount: float, payout_method):
+    def create_payout(promoter: Promoter, amount: float, payout_method: str):
         """
         Creates a payout record for a promoter and marks their pending commissions as paid.
 
         Args:
             promoter (Promoter): The promoter receiving the payout.
             amount (float): The payout amount.
-            payout_method (str): The method used for the payout (e.g., 'wise', 'crypto').
+            payout_method (str): The method used for the payout (e.g ., 'wise', 'crypto').
 
         Returns:
             None

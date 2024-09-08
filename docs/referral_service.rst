@@ -101,14 +101,14 @@ The `send_referral_invitation_email` method allows promoters to send an email in
 
 1. **Environment Variables**:
 
-   Make sure to set the following environment variables in your `.env` file before sending referral invitation emails:
+Make sure to set the following environment variables in your `.env` file before sending referral invitation emails:
 
    .. code-block:: bash
 
        BASE_REFERRAL_LINK=
        BASE_EMAIL=
+These variables are necessary for generating the referral link and setting the "from" email address.
 
-    These variables are necessary for generating the referral link and setting the "from" email address.
 
 2. **Correct Template Path**:
 
