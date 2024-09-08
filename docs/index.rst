@@ -14,6 +14,7 @@ Welcome to django-referral-system's documentation!
    getting_started
    promoter
    referral
+   referral_service
 
 
 Key Features
