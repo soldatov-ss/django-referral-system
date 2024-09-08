@@ -26,13 +26,10 @@ When a referred user purchases a subscription, the `ReferralService` updates the
 
     ReferralService.handle_purchase_subscription(
         user=user_instance,
-        amount_paid=10000,
-        invoice_external_id=12345
+        amount_paid=10000,  # original paid amount in cents
+        invoice_external_id=12345   # an optional external invoice ID (e.g. chargeebe_id).
     )
 
-.. note::
-
-    Field amount_paid must be in cents
 
 The method updates the user's referral status and calculates the commission based on the amount paid.
 
@@ -47,15 +44,11 @@ If a referred user requests a refund, the service updates the referral status to
 
     ReferralService.handle_user_refund(
         user=user_instance,
-        amount_refunded=5000,
-        amount_paid=10000,
-        invoice_external_id=12345
+        amount_refunded=5000,   # refunded amount in cents
+        amount_paid=10000,  # original paid amount in cents
+        invoice_external_id=12345   # an optional external invoice ID (e.g. chargeebe_id).
     )
 
-
-.. note::
-
-    Field amount_paid and amount_refunded must be in cents
 
 The method sets the referral status to `Refund` and adjusts the commission accordingly.
 
@@ -85,3 +78,51 @@ In this case, the promoter's final commission will be $5, reflecting the amount 
 .. note::
 
     It is possible for a promoter to have a negative balance if multiple refunds are processed and the refunded amounts exceed the promoter’s total earned commissions. This can occur if the promoter has already been paid for referrals, but the referred users later request refunds.
+
+
+Sending Referral Invitation Emails
+----------------------------------
+
+The `send_referral_invitation_email` method allows promoters to send an email invitation containing a referral link.
+
+- **Method**: `send_referral_invitation_email`
+
+.. code-block:: python
+
+    ReferralService.send_referral_invitation_email(
+        emails_to=["invitee@example.com"],
+        invitation_link="http://localhost:8000/?ref=6B86B273FF",
+        promoter_full_name="John Doe",
+        subject="Join us!",
+        template_path="app_name/referral_invitation.html"
+    )
+
+### Key Requirements
+
+1. **Environment Variables**:
+
+   Make sure to set the following environment variables in your `.env` file before sending referral invitation emails:
+
+   .. code-block:: bash
+
+       BASE_REFERRAL_LINK=
+       BASE_EMAIL=
+
+    These variables are necessary for generating the referral link and setting the "from" email address.
+
+2. **Correct Template Path**:
+
+   You must correctly pass the path to the HTML email template when calling this method.
+
+   Example of saving an email template in Django:
+
+   - Full Path: `app_name/templates/app_name/referral_invitation.html`
+
+.. note::
+
+    The referral link sent by email contains an extra param `ref-source=email` for future tracking.
+
+    .. code-block:: bash
+
+        GET http://localhost:8000/?ref=6B86B273FF&ref-source=email
+
