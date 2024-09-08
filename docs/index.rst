@@ -11,6 +11,8 @@ Welcome to django-referral-system's documentation!
    :caption: Contents:
 
    installation
+   getting_started
+   promoter
 
 
 Key Features

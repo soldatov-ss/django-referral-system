@@ -190,7 +190,7 @@ class ReferralService:
                 logger.info(f"User {user.email} became an active referral of {promoter.user.email}")
                 return commission
         except ObjectDoesNotExist:
-            logger.error(f"User with ID {user.id} has no referral associated.")
+            logger.warning(f"User with ID {user.id} has no referral associated.")
 
     @staticmethod
     @transaction.atomic
@@ -221,7 +221,7 @@ class ReferralService:
                 logger.info(f"User {user.email} has been refunded {amount_refunded}.")
                 return commission
         except ObjectDoesNotExist:
-            logger.error(f"User with ID {user.id} has no referral associated.")
+            logger.warning(f"User with ID {user.id} has no referral associated.")
 
 
 referral_service = ReferralService()
