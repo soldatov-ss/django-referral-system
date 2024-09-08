@@ -4,6 +4,7 @@
 [![PyPI version](https://badge.fury.io/py/django-referral-system.svg)](https://badge.fury.io/py/django-referral-system)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/soldatov-ss/django-referral-system/blob/main/LICENSE)
 [![Python Versions](https://img.shields.io/pypi/pyversions/django-referral-system.svg)](https://pypi.org/project/django-referral-system/)
+[![Coverage Status](https://coveralls.io/repos/github/soldatov-ss/django-referral-system/badge.svg?branch=main)](https://coveralls.io/github/soldatov-ss/django-referral-system?branch=main)
 
 A Django app for managing referral programs, promoters, referrals, and tracking referral performance with features like commission setting, invitation management, and Wise payouts.
 ## Documentation
