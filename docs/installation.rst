@@ -4,12 +4,14 @@ Installation Guide
 Follow these steps to install and set up `django-referral-system`:
 
 1. Install the package via pip:
+--------------------
 
    .. code-block:: bash
 
       pip install django-referral-system
 
 2. Add referrals to your `INSTALLED_APPS` in `settings.py`:
+--------------------
 
    .. code-block:: python
 
@@ -19,6 +21,7 @@ Follow these steps to install and set up `django-referral-system`:
       ]
 
 3. Add to `urls.py`:
+--------------------
 
    .. code-block:: python
 
@@ -30,6 +33,7 @@ Follow these steps to install and set up `django-referral-system`:
       ]
 
 4. Apply Migrations:
+--------------------
 
    .. code-block:: bash
 
