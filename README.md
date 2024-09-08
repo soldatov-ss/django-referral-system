@@ -67,3 +67,5 @@ This package is licensed under the MIT License. See the LICENSE file for more de
 
 ### Contributing
 If you find any issues or have suggestions, feel free to open an issue or submit a pull request.
+
+To support this project, please give star it on Github. ![github star](docs/github-star.png)
