@@ -1,4 +1,4 @@
-from typing import Generic, List, Optional, Tuple, Type, TypeVar
+from typing import Generic, List, Optional, Tuple, Type, TypeVar, Dict
 
 from django.db.models import Model, QuerySet
 from django.shortcuts import get_object_or_404
@@ -10,51 +10,51 @@ class BaseRepository(Generic[T]):
     def __init__(self, model: Type[T]):
         self.model = model
 
-    def get_one(self, **kwargs) -> Optional[T]:
+    def get_one(self, **kwargs:Dict[str, any]) -> Optional[T]:
         try:
             return self.model.objects.get(**kwargs)
         except self.model.DoesNotExist:
             return None
 
-    def get_object_or_404(self, **kwargs) -> T:
+    def get_object_or_404(self, **kwargs: Dict[str, any]) -> T:
         return get_object_or_404(self.model, **kwargs)
 
     def get_all(self) -> QuerySet[T]:
         return self.model.objects.all()
 
-    def get_or_create(self, defaults: Optional[dict] = None, **kwargs) -> Tuple[T, bool]:
+    def get_or_create(self, defaults: Optional[dict] = None, **kwargs:Dict[str, any]) -> Tuple[T, bool]:
         return self.model.objects.get_or_create(defaults=defaults, **kwargs)
 
-    def create(self, **kwargs) -> T:
+    def create(self, **kwargs: Dict[str, any]) -> T:
         return self.model.objects.create(**kwargs)
 
     def create_many(self, data_list: List[dict]) -> List[T]:
         instances = [self.model(**data) for data in data_list]
         return self.model.objects.bulk_create(instances)
 
-    def update(self, values: dict, **kwargs) -> T:
+    def update(self, values: dict, **kwargs: Dict[str, any]) -> T:
         instance = self.model.objects.get(**kwargs)
         for attr, value in values.items():
             setattr(instance, attr, value)
         instance.save()
         return instance
 
-    def update_or_create(self, defaults: Optional[dict] = None, **kwargs) -> Tuple[T, bool]:
+    def update_or_create(self, defaults: Optional[dict] = None, **kwargs: Dict[str, any]) -> Tuple[T, bool]:
         return self.model.objects.update_or_create(defaults=defaults, **kwargs)
 
-    def filter(self, **kwargs) -> QuerySet[T]:
+    def filter(self, **kwargs: Dict[str, any]) -> QuerySet[T]:
         return self.model.objects.filter(**kwargs)
 
-    def exclude(self, **kwargs) -> QuerySet[T]:
+    def exclude(self, **kwargs: Dict[str, any]) -> QuerySet[T]:
         return self.model.objects.exclude(**kwargs)
 
     def select_for_update(self) -> QuerySet[T]:
         return self.model.objects.select_for_update()
 
-    def filter_one(self, **kwargs) -> Optional[T]:
+    def filter_one(self, **kwargs: Dict[str, any]) -> Optional[T]:
         return self.model.objects.filter(**kwargs).first()
 
-    def delete(self, db_obj: Optional[T] = None, **kwargs) -> bool:
+    def delete(self, db_obj: Optional[T] = None, **kwargs: Dict[str, any]) -> bool:
         if db_obj:
             deleted_count, _ = db_obj.delete()
             return deleted_count > 0
@@ -63,10 +63,10 @@ class BaseRepository(Generic[T]):
         deleted_count, _ = instances.delete()
         return deleted_count > 0
 
-    def select_related(self, *args) -> QuerySet[T]:
+    def select_related(self, *args:List[str]) -> QuerySet[T]:
         return self.model.objects.select_related(*args)
 
-    def prefetch_related(self, *args) -> QuerySet[T]:
+    def prefetch_related(self, *args:List[str]) -> QuerySet[T]:
         return self.model.objects.prefetch_related(*args)
 
     def bulk_create(self, objs: List[T]) -> List[T]:
