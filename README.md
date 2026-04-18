@@ -6,72 +6,89 @@
 [![Python Versions](https://img.shields.io/badge/python-3.9%20|%203.10%20|%203.11%20|%203.12%20|%203.13-blue.svg)](https://pypi.org/project/django-referral-system/)
 [![Coverage Status](https://coveralls.io/repos/github/soldatov-ss/django-referral-system/badge.svg?branch=main)](https://coveralls.io/github/soldatov-ss/django-referral-system?branch=main)
 
-A Django app for managing referral programs, promoters, referrals, and tracking referral performance with features like commission setting, invitation management, and Wise payouts.
+**A plug-and-play Django referral engine.** Track promoters, reward commissions, manage payouts — all wired up in minutes.
 
-Supported Python versions: 3.9, 3.10, 3.11, 3.12, and 3.13.
+Full documentation: [Read the Docs](https://django-referral-system.readthedocs.io/en/latest/index.html)
 
-## Documentation
+---
 
-Full documentation is available at [Read the Docs](https://django-referral-system.readthedocs.io/en/latest/index.html).
+## What it does
 
-## Features
-* **Promoter Management**: Easily create and manage promoters who can invite referrals to join your platform.
-* **Referral Tracking**: Promoters can track their list of referrals, including invitation details, sign-up status, and more.
-* **Earnings Monitoring**: Promoters can view their recent earnings, aggregated by day for the last 7 days, including commissions from successful referrals.
-* **Commission-Based Rewards**: Promoters earn money by receiving commissions from referrals they invite, with configurable commission rates based on the active referral program.
-* **Customizable Payout Methods**: Promoters can set and update their preferred payout methods (e.g., Wise) and minimum withdrawal balances.
-* **Wise Payout Integration**: Automatically generate CSV files for Wise payouts and process payouts for promoters whose balance meets the minimum withdrawal amount.
-* **Email Invitation**: Promoters can send invitation emails to potential referrals with a custom HTML template. Ensure that the `BASE_REFERRAL_LINK` and `BASE_EMAIL` environment variables are properly set.
-* **Refund Handling**: Automatically adjust promoter commissions in case of user refunds, ensuring that promoters only earn commissions for completed transactions.
-* **Referral Program Flexibility**: Only one referral program can be active at a time, allowing for focused and streamlined referral management.
-* **Detailed Payout History**: Promoters can view their full payout history, providing transparency and easy tracking of payment status.
-* **Click Tracking**: Keep track of how many times a referral link has been clicked, helping promoters measure the performance of their referral efforts.
+| Area | Capability |
+|------|------------|
+| **Promoters** | Create and manage promoters with unique referral tokens and links |
+| **Referral tracking** | Track sign-ups, activation status, and click counts per link |
+| **Commissions** | Configurable commission rates tied to the active referral program |
+| **Payouts** | Wise CSV export; auto-skip promoters below minimum withdrawal balance |
+| **Refunds** | Commission is automatically reversed when a referred user refunds |
+| **Email invitations** | Send branded HTML invite emails via a custom template |
 
-## Installation
+Only one referral program can be active at a time, keeping the logic focused and predictable.
 
-1. Install the package via pip:
+---
+
+## Quick start
+
+**1. Install**
 
 ```bash
 pip install django-referral-system
 ```
 
-The package supports Python 3.9 through 3.13.
+Requires Python 3.9 – 3.13 and Django 4.2+.
 
-2. Add referrals to your INSTALLED_APPS in settings.py:
+**2. Add to `INSTALLED_APPS`**
 
 ```python
 INSTALLED_APPS = [
-    # other apps
-    'referrals',
+    ...
+    "referrals",
 ]
 ```
 
-3. Add to urls.py
+**3. Mount the URLs**
+
 ```python
 from django.urls import path, include
 
 urlpatterns = [
-    # Other URL patterns...
-    path('referrals/', include("referrals.urls")),
+    ...
+    path("referrals/", include("referrals.urls")),
 ]
 ```
-4. Apply Migrations
+
+**4. Migrate**
+
 ```bash
 python manage.py migrate
 ```
 
-5. Create a Referral Program
-After installation, you can create a new referral program using the provided management command:
-If this program is set to active, any previous active referral programs will be deactivated automatically.
+**5. Create a referral program**
+
 ```bash
-python manage.py create_referral_program --name="My Referral Program" --commission-rate=5.00 --min-withdrawal-balance=10.00
+python manage.py create_referral_program \
+    --name="My Referral Program" \
+    --commission-rate=5.00 \
+    --min-withdrawal-balance=10.00
 ```
 
+Setting a program as active automatically deactivates any existing active program.
 
-### License
-This package is licensed under the MIT License. See the LICENSE file for more details.
+---
 
-### Contributing
-If you find any issues or have suggestions, feel free to open an issue or submit a pull request.
+## Environment variables
 
-To support this project, please give star it on Github. ![github star](docs/github-star.png)
+| Variable | Purpose |
+|----------|---------|
+| `BASE_REFERRAL_LINK` | Base URL used when generating referral links |
+| `BASE_EMAIL` | Sender address for invitation emails |
+
+---
+
+## License
+
+MIT — see [LICENSE](LICENSE) for details.
+
+## Contributing
+
+Issues and pull requests are welcome. If this project saves you time, a star on GitHub goes a long way. ![github star](docs/github-star.png)
