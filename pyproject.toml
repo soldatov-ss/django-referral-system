@@ -51,8 +51,13 @@ test = [
 [project.urls]
 Homepage = "https://github.com/soldatov-ss/django-referral-system"
 
+[tool.setuptools]
+include-package-data = false
+
 [tool.setuptools.packages.find]
 where = ["."]
+include = ["referrals*"]
+exclude = ["*.tests", "*.tests.*"]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "test_app.settings"
