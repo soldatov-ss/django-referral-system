@@ -86,7 +86,7 @@ class Promoter(TimeStampedModel):
         return self.total_earned - self.total_paid
 
     def __str__(self):
-        return f"{self.user.email} - {self.referral_link}"
+        return f"{getattr(self.user, 'email', self.user.pk)} - {self.referral_link}"
 
     def save(self, *args, **kwargs):
         if self.pk is None:
