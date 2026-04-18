@@ -1,6 +1,6 @@
 import logging
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 
 from referrals.config import config
 from referrals.models import Promoter
@@ -8,6 +8,7 @@ from referrals.repositories.promoter_repository import promoter_repository
 from referrals.services.referral_service import referral_service
 
 logger = logging.getLogger(__name__)
+User = get_user_model()
 
 
 class PromoterService:

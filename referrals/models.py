@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from django.contrib.auth.models import User
+from django.conf import settings
 from django.core.validators import MinValueValidator
 from django.db import models, transaction
 from django.db.models import Sum
@@ -61,7 +61,7 @@ class PayoutMethod(models.Model):
 
 
 class Promoter(TimeStampedModel):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="promoter")
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="promoter")
     referral_token = models.CharField(max_length=256, blank=True, null=True, unique=True, help_text="Referral token")
     referral_link = models.CharField(max_length=256, blank=True, null=True, unique=True, help_text="Referral link")
     active_payout_method = models.ForeignKey(PayoutMethod, on_delete=models.SET_NULL, null=True, blank=True)
@@ -97,7 +97,7 @@ class Promoter(TimeStampedModel):
 
 
 class Referral(TimeStampedModel):
-    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="referral")
+    user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="referral")
     promoter = models.ForeignKey(Promoter, related_name="referrals", on_delete=models.CASCADE)
     invitation_method = models.CharField(max_length=10, choices=InvitationMethodChoices.choices)
     status = models.CharField(max_length=10, choices=ReferralStateChoices.choices)

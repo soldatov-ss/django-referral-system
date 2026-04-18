@@ -4,7 +4,7 @@ import hashlib
 import logging
 from typing import Optional
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from django.core.exceptions import ObjectDoesNotExist
 from django.core.mail import EmailMessage
 from django.db import transaction
@@ -20,6 +20,7 @@ from referrals.services.promoter_payout_service import promoter_payout_service
 from referrals.utils import append_query_params
 
 logger = logging.getLogger(__name__)
+User = get_user_model()
 
 
 class ReferralService:
