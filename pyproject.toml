@@ -1,9 +1,61 @@
 [build-system]
-requires = ['setuptools>=72.2.0']
-build-backend = 'setuptools.build_meta'
+requires = ["setuptools>=72.2.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "django-referral-system"
+version = "0.2.0"
+description = "A Django app for managing referral programs, promoters, referrals, and tracking referral performance with advanced features like commission setting, invitation management, and Wise payouts."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Soldatov Serhii", email = "soldatov.own@gmail.com" }]
+requires-python = ">=3.8"
+classifiers = [
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 4",
+    "Framework :: Django :: 5",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+]
+dependencies = [
+    "Django>=4.1",
+    "djangorestframework>=3.14",
+    "pandas>=2.0",
+    "pydantic>=2.0",
+    "python-dotenv>=1.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-django",
+    "coverage",
+    "ruff",
+    "ipython",
+]
+
+[project.urls]
+Homepage = "https://github.com/soldatov-ss/django-referral-system"
+
+[tool.setuptools.packages.find]
+where = ["."]
 
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "test_app.settings"
 pythonpath = [".", "test_app"]
 testpaths = ["referrals"]
 python_files = ["tests.py", "test_*.py"]
+addopts = "--tb=short -q"
