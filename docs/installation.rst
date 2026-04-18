@@ -3,6 +3,8 @@ Installation Guide
 
 Follow these steps to install and set up `django-referral-system`:
 
+Supported Python versions: 3.9, 3.10, 3.11, 3.12, and 3.13.
+
 1. Install the package via pip:
 
    .. code-block:: bash

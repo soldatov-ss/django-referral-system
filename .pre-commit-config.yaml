@@ -2,17 +2,17 @@ ci:
   autoupdate_schedule: monthly
 
 default_language_version:
-  python: python3.8
+  python: python3.12
 
 repos:
   - repo: https://github.com/adamchainz/django-upgrade
-    rev: 1.21.0
+    rev: 1.30.0
     hooks:
       - id: django-upgrade
         args: [--target-version, "4.2"]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.6.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
       - id: check-case-conflict

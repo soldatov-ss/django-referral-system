@@ -9,7 +9,7 @@
 project = "django-referral-system"
 copyright = "2024, Soldatov Serhii"
 author = "Soldatov Serhii"
-release = "0.1.0"
+release = "0.2.0"
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration

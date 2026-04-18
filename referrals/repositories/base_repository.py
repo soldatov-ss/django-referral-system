@@ -1,4 +1,4 @@
-from typing import Generic, List, Optional, Tuple, Type, TypeVar
+from typing import Generic, Optional, Type, TypeVar
 
 from django.db.models import Model, QuerySet
 from django.shortcuts import get_object_or_404
@@ -22,13 +22,13 @@ class BaseRepository(Generic[T]):
     def get_all(self) -> QuerySet[T]:
         return self.model.objects.all()
 
-    def get_or_create(self, defaults: Optional[dict] = None, **kwargs) -> Tuple[T, bool]:
+    def get_or_create(self, defaults: Optional[dict] = None, **kwargs) -> tuple[T, bool]:
         return self.model.objects.get_or_create(defaults=defaults, **kwargs)
 
     def create(self, **kwargs) -> T:
         return self.model.objects.create(**kwargs)
 
-    def create_many(self, data_list: List[dict]) -> List[T]:
+    def create_many(self, data_list: list[dict]) -> list[T]:
         instances = [self.model(**data) for data in data_list]
         return self.model.objects.bulk_create(instances)
 
@@ -39,7 +39,7 @@ class BaseRepository(Generic[T]):
         instance.save()
         return instance
 
-    def update_or_create(self, defaults: Optional[dict] = None, **kwargs) -> Tuple[T, bool]:
+    def update_or_create(self, defaults: Optional[dict] = None, **kwargs) -> tuple[T, bool]:
         return self.model.objects.update_or_create(defaults=defaults, **kwargs)
 
     def filter(self, **kwargs) -> QuerySet[T]:
@@ -69,10 +69,10 @@ class BaseRepository(Generic[T]):
     def prefetch_related(self, *args) -> QuerySet[T]:
         return self.model.objects.prefetch_related(*args)
 
-    def bulk_create(self, objs: List[T]) -> List[T]:
+    def bulk_create(self, objs: list[T]) -> list[T]:
         return self.model.objects.bulk_create(objs)
 
-    def bulk_update(self, objs: List[T], fields: Optional[List[str]] = None) -> None:
+    def bulk_update(self, objs: list[T], fields: Optional[list[str]] = None) -> None:
         return self.model.objects.bulk_update(objs, fields)
 
     def values_list(self, *fields, flat: bool = False, named: bool = False) -> QuerySet:
