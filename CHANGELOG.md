@@ -17,9 +17,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Use `django.utils.timezone.now()` instead of `datetime.today()` for timezone-aware datetime handling
 - Simplified `append_query_params` — `parse_qs` always returns lists, removed redundant branch
 - `ReferralService.get_promoter_by_user_id` now checks `user is None` before attribute access instead of catching `User.DoesNotExist`
+- Pinned build and runtime dependencies to Python 3.8-compatible ranges for the final Python 3.8-supported release
+- CI now tests Python 3.8 through 3.13, with coverage uploaded from Python 3.12 only
 
 ### Fixed
 - Extended test coverage across referral, promoter, and commission flows (81 tests total)
+- Replaced 3.9+ generic type-hint syntax in runtime-facing annotations to avoid Python 3.8 introspection issues
+
+### Deprecated
+- Python 3.8 support ends after `0.2.0`; the next release will require Python 3.9+
 
 ## [0.1.3] - 2025-03-03
 

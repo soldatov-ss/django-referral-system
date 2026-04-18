@@ -4,7 +4,7 @@ from collections import defaultdict
 from datetime import datetime, timedelta
 import hashlib
 import logging
-from typing import Optional
+from typing import Dict, List, Optional
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
@@ -32,7 +32,7 @@ class ReferralService:
 
     @staticmethod
     def send_referral_invitation_email(
-        emails_to: list[str],
+        emails_to: List[str],
         invitation_link: str,
         promoter_full_name: str,
         subject: str,
@@ -95,7 +95,7 @@ class ReferralService:
         return serializer.data
 
     @staticmethod
-    def aggregate_earnings_by_day(earnings: list[dict]) -> dict[str, int]:
+    def aggregate_earnings_by_day(earnings: List[dict]) -> Dict[str, int]:
         """
         Aggregates earnings by the day of the week.
 
@@ -116,7 +116,7 @@ class ReferralService:
         return earnings_by_day
 
     @staticmethod
-    def get_last_7_days_earnings(earnings: list[dict]) -> list[dict]:
+    def get_last_7_days_earnings(earnings: List[dict]) -> List[dict]:
         """
         Retrieves the earnings statistics for the last 7 days.
 

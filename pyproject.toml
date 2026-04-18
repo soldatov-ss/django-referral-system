@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools>=72.2.0"]
+requires = ["setuptools>=72.2.0,<75.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -31,11 +31,11 @@ classifiers = [
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]
 dependencies = [
-    "Django>=4.1",
-    "djangorestframework>=3.14",
-    "pandas>=2.0",
-    "pydantic>=2.0",
-    "python-dotenv>=1.0",
+    "Django>=4.2,<5.0",
+    "djangorestframework>=3.14,<3.16",
+    "pandas>=2.0,<2.1",
+    "pydantic>=2.0,<2.11",
+    "python-dotenv>=1.0,<1.1",
 ]
 
 [project.optional-dependencies]
