@@ -24,34 +24,39 @@ from referrals.repositories import promoter_commission_repository, promoter_payo
 from referrals.repositories.base_repository import BaseRepository
 from referrals.repositories.decorators import sync_to_async
 from referrals.serializers import PromoterPayoutsSerializer, PromoterSerializer, ReferralSerializer
+import sys
+
 from referrals.services import promoter_service, referral_service
+_referral_service_module = sys.modules['referrals.services.referral_service']
 from referrals.services.promoter_payout_service import promoter_payout_service
 from referrals.utils import append_query_params
 
 
 class ReferralProgramViewSetTestCase(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        cls.referral_program = ReferralProgram.objects.create(name='test_program', commission_rate=20.00,
+                                                              is_active=True, min_withdrawal_balance=10)
+        cls.user = User.objects.create_user(username='test-user', email='test@example.com', password='Password123')
+        cls.user2 = User.objects.create_user(username='test-user2', email='test2@example.com', password='Password321')
+        cls.user3 = User.objects.create_user(username='test-user3', email='test3@example.com', password='Password121')
+        cls.user4 = User.objects.create_user(username='test-user4', email='test4@example.com', password='Password111')
+        cls.promoter = Promoter.objects.create(user=cls.user, referral_token='test-token')
+        cls.referral = Referral.objects.create(
+            user=cls.user2,
+            promoter=cls.promoter,
+            status=ReferralStateChoices.ACTIVE
+        )
+        cls.referral2 = Referral.objects.create(
+            user=cls.user3,
+            promoter=cls.promoter,
+            status=ReferralStateChoices.ACTIVE
+        )
+
     def setUp(self):
-        self.referral_program = ReferralProgram.objects.create(name='test_program', commission_rate=20.00,
-                                                               is_active=True, min_withdrawal_balance=10)
-        self.user = User.objects.create_user(username='test-user', email='test@example.com', password='Password123')
-        self.user2 = User.objects.create_user(username='test-user2', email='test2@example.com', password='Password321')
-        self.user3 = User.objects.create_user(username='test-user3', email='test3@example.com', password='Password121')
-        self.user4 = User.objects.create_user(username='test-user4', email='test4@example.com', password='Password111')
-
-        self.promoter = Promoter.objects.create(user=self.user, referral_token='test-token')
-
-        self.referral = Referral.objects.create(
-            user=self.user2,
-            promoter=self.promoter,
-            status=ReferralStateChoices.ACTIVE
-        )
-        self.referral2 = Referral.objects.create(
-            user=self.user3,
-            promoter=self.promoter,
-            status=ReferralStateChoices.ACTIVE
-        )
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
+        self.promoter.refresh_from_db()
 
     def test_create_referral_success(self):
         url = reverse('referrals-list')
@@ -287,39 +292,35 @@ class ReferralProgramViewSetTestCase(APITestCase):
         self.assertIsInstance(response.data, list)
         self.assertEqual(len(response.data), 0)
 
-    def tearDown(self):
-        ReferralProgram.objects.all().delete()
-        Promoter.objects.all().delete()
-        Referral.objects.all().delete()
-        PromoterPayout.objects.all().delete()
-        PromoterCommission.objects.all().delete()
-        User.objects.all().delete()
-
 
 class ReferralServiceTestCase(TestCase):
     commission_rate = 20.00
 
-    def setUp(self):
-        self.referral_program = ReferralProgram.objects.create(name='test_program',
-                                                               commission_rate=self.commission_rate,
-                                                               is_active=True, min_withdrawal_balance=10)
-        self.user = User.objects.create_user(username='test-user', email='test@example.com', password='Password123')
-        self.user2 = User.objects.create_user(username='test-user2', email='test2@example.com', password='Password321')
-        self.user3 = User.objects.create_user(username='test-user3', email='test3@example.com', password='Password121')
+    @classmethod
+    def setUpTestData(cls):
+        cls.referral_program = ReferralProgram.objects.create(name='test_program',
+                                                              commission_rate=cls.commission_rate,
+                                                              is_active=True, min_withdrawal_balance=10)
+        cls.user = User.objects.create_user(username='test-user', email='test@example.com', password='Password123')
+        cls.user2 = User.objects.create_user(username='test-user2', email='test2@example.com', password='Password321')
+        cls.user3 = User.objects.create_user(username='test-user3', email='test3@example.com', password='Password121')
+        cls.promoter = Promoter.objects.create(user=cls.user, referral_token='test-token')
+        cls.referral = Referral.objects.create(
+            user=cls.user2,
+            promoter=cls.promoter,
+            status=ReferralStateChoices.SIGNUP
+        )
+        cls.referral2 = Referral.objects.create(
+            user=cls.user3,
+            promoter=cls.promoter,
+            status=ReferralStateChoices.SIGNUP
+        )
 
-        self.promoter = Promoter.objects.create(user=self.user, referral_token='test-token')
-        self.referral = Referral.objects.create(
-            user=self.user2,
-            promoter=self.promoter,
-            status=ReferralStateChoices.SIGNUP
-        )
-        self.referral2 = Referral.objects.create(
-            user=self.user3,
-            promoter=self.promoter,
-            status=ReferralStateChoices.SIGNUP
-        )
+    def setUp(self):
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
+        self.referral.refresh_from_db()
+        self.referral2.refresh_from_db()
 
     def test_get_user_earnings(self):
         seven_days_ago = timezone.now() - timedelta(days=6)
@@ -395,13 +396,6 @@ class ReferralServiceTestCase(TestCase):
         self.assertEqual(result.status, PromoterCommissionStatusChoices.REFUND)
         self.assertEqual(self.referral.status, ReferralStateChoices.REFUND)
 
-    def tearDown(self):
-        User.objects.all().delete()
-        ReferralProgram.objects.all().delete()
-        Promoter.objects.all().delete()
-        Referral.objects.all().delete()
-        PromoterCommission.objects.all().delete()
-
 
 class PromoterServiceTestCase(TestCase):
     @classmethod
@@ -430,25 +424,24 @@ class PromoterServiceTestCase(TestCase):
         self.assertEqual(promoter, existing_promoter)
         self.assertTrue(Promoter.objects.filter(user=self.user).exists())
 
-    @classmethod
-    def tearDownClass(cls):
-        Promoter.objects.all().delete()
-        User.objects.all().delete()
-
 
 # ---------------------------------------------------------------------------
 # View edge-case tests
 # ---------------------------------------------------------------------------
 
 class ViewSetEdgeCaseTestCase(APITestCase):
-    def setUp(self):
-        self.referral_program = ReferralProgram.objects.create(
+    @classmethod
+    def setUpTestData(cls):
+        cls.referral_program = ReferralProgram.objects.create(
             name='edge_program', commission_rate=20.00, is_active=True, min_withdrawal_balance=10
         )
-        self.user = User.objects.create_user(username='edge-user', email='edge@example.com', password='Pass123')
-        self.promoter = Promoter.objects.create(user=self.user, referral_token='edge-token')
+        cls.user = User.objects.create_user(username='edge-user', email='edge@example.com', password='Pass123')
+        cls.promoter = Promoter.objects.create(user=cls.user, referral_token='edge-token')
+
+    def setUp(self):
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
+        self.promoter.refresh_from_db()
 
     def test_set_payout_method_invalid_data_returns_400(self):
         url = reverse('referrals-set-payout-method')
@@ -475,36 +468,31 @@ class ViewSetEdgeCaseTestCase(APITestCase):
         response = self.client.patch(url, {'min_withdrawal_balance': 'not-a-number'}, format='json')
         self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
 
-    def tearDown(self):
-        User.objects.all().delete()
-        ReferralProgram.objects.all().delete()
-        Promoter.objects.all().delete()
-        PayoutMethod.objects.all().delete()
-
 
 # ---------------------------------------------------------------------------
 # ReferralService additional tests
 # ---------------------------------------------------------------------------
 
 class ReferralServiceEdgeCaseTestCase(TestCase):
-    def setUp(self):
-        self.referral_program = ReferralProgram.objects.create(
+    @classmethod
+    def setUpTestData(cls):
+        cls.referral_program = ReferralProgram.objects.create(
             name='rs_program', commission_rate=20.00, is_active=True, min_withdrawal_balance=10
         )
-        self.user = User.objects.create_user(username='rs-user', email='rs@example.com', password='Pass123')
-        self.user2 = User.objects.create_user(username='rs-user2', email='rs2@example.com', password='Pass123')
-        self.promoter = Promoter.objects.create(user=self.user, referral_token='rs-token')
-        self.referral = Referral.objects.create(
-            user=self.user2, promoter=self.promoter, status=ReferralStateChoices.SIGNUP
+        cls.user = User.objects.create_user(username='rs-user', email='rs@example.com', password='Pass123')
+        cls.user2 = User.objects.create_user(username='rs-user2', email='rs2@example.com', password='Pass123')
+        cls.promoter = Promoter.objects.create(user=cls.user, referral_token='rs-token')
+        cls.referral = Referral.objects.create(
+            user=cls.user2, promoter=cls.promoter, status=ReferralStateChoices.SIGNUP
         )
 
-    @patch('referrals.services.referral_service.get_template')
+    @patch.object(_referral_service_module, 'get_template')
     def test_send_referral_invitation_email_success(self, mock_get_template):
         mock_template = MagicMock()
         mock_template.render.return_value = '<html>body</html>'
         mock_get_template.return_value = mock_template
 
-        with patch('referrals.services.referral_service.EmailMessage') as mock_email_cls:
+        with patch.object(_referral_service_module, 'EmailMessage') as mock_email_cls:
             mock_email_instance = MagicMock()
             mock_email_cls.return_value = mock_email_instance
 
@@ -519,7 +507,7 @@ class ReferralServiceEdgeCaseTestCase(TestCase):
         self.assertTrue(result)
         mock_email_instance.send.assert_called_once()
 
-    @patch('referrals.services.referral_service.get_template')
+    @patch.object(_referral_service_module, 'get_template')
     def test_send_referral_invitation_email_template_not_found(self, mock_get_template):
         mock_get_template.side_effect = TemplateDoesNotExist('email/missing.html')
 
@@ -548,32 +536,29 @@ class ReferralServiceEdgeCaseTestCase(TestCase):
         result = referral_service.handle_user_refund(self.user, 500, 1000)
         self.assertIsNone(result)
 
-    def tearDown(self):
-        User.objects.all().delete()
-        ReferralProgram.objects.all().delete()
-        Promoter.objects.all().delete()
-        Referral.objects.all().delete()
-        PromoterCommission.objects.all().delete()
-
 
 # ---------------------------------------------------------------------------
 # PromoterPayoutService additional tests
 # ---------------------------------------------------------------------------
 
 class PromoterPayoutServiceEdgeCaseTestCase(TestCase):
-    def setUp(self):
-        self.referral_program = ReferralProgram.objects.create(
+    @classmethod
+    def setUpTestData(cls):
+        cls.referral_program = ReferralProgram.objects.create(
             name='payout_program', commission_rate=20.00, is_active=True, min_withdrawal_balance=10
         )
-        self.user = User.objects.create_user(
+        cls.user = User.objects.create_user(
             username='payout-user', first_name='Pay', last_name='Out',
             email='payout@example.com', password='Pass123'
         )
-        self.user2 = User.objects.create_user(username='payout-user2', email='payout2@example.com', password='Pass123')
-        self.promoter = Promoter.objects.create(user=self.user, referral_token='payout-token')
-        self.referral = Referral.objects.create(
-            user=self.user2, promoter=self.promoter, status=ReferralStateChoices.SIGNUP
+        cls.user2 = User.objects.create_user(username='payout-user2', email='payout2@example.com', password='Pass123')
+        cls.promoter = Promoter.objects.create(user=cls.user, referral_token='payout-token')
+        cls.referral = Referral.objects.create(
+            user=cls.user2, promoter=cls.promoter, status=ReferralStateChoices.SIGNUP
         )
+
+    def setUp(self):
+        self.promoter.refresh_from_db()
 
     def test_send_wise_csv_for_promoters_payouts_eligible_promoter(self):
         """Covers send_wise_csv_for_promoters_payouts main loop (lines 44-63) and helpers.py."""
@@ -633,30 +618,22 @@ class PromoterPayoutServiceEdgeCaseTestCase(TestCase):
         with self.assertRaises(ViewException):
             promoter_payout_service.calculate_refund(self.referral, 500, 1000)
 
-    def tearDown(self):
-        User.objects.all().delete()
-        ReferralProgram.objects.all().delete()
-        Promoter.objects.all().delete()
-        Referral.objects.all().delete()
-        PromoterCommission.objects.all().delete()
-        PromoterPayout.objects.all().delete()
-        PayoutMethod.objects.all().delete()
-
 
 # ---------------------------------------------------------------------------
 # Repository tests
 # ---------------------------------------------------------------------------
 
 class PromoterCommissionRepositoryTestCase(TestCase):
-    def setUp(self):
-        self.referral_program = ReferralProgram.objects.create(
+    @classmethod
+    def setUpTestData(cls):
+        cls.referral_program = ReferralProgram.objects.create(
             name='cr_program', commission_rate=20.00, is_active=True, min_withdrawal_balance=10
         )
-        self.user = User.objects.create_user(username='cr-user', email='cr@example.com', password='Pass123')
-        self.user2 = User.objects.create_user(username='cr-user2', email='cr2@example.com', password='Pass123')
-        self.promoter = Promoter.objects.create(user=self.user, referral_token='cr-token')
-        self.referral = Referral.objects.create(
-            user=self.user2, promoter=self.promoter, status=ReferralStateChoices.ACTIVE
+        cls.user = User.objects.create_user(username='cr-user', email='cr@example.com', password='Pass123')
+        cls.user2 = User.objects.create_user(username='cr-user2', email='cr2@example.com', password='Pass123')
+        cls.promoter = Promoter.objects.create(user=cls.user, referral_token='cr-token')
+        cls.referral = Referral.objects.create(
+            user=cls.user2, promoter=cls.promoter, status=ReferralStateChoices.ACTIVE
         )
 
     def test_mark_commission_paid(self):
@@ -678,21 +655,15 @@ class PromoterCommissionRepositoryTestCase(TestCase):
         self.assertEqual(commission.status, PromoterCommissionStatusChoices.FAILED)
         self.assertEqual(commission.failure_reason, 'Payment gateway error')
 
-    def tearDown(self):
-        User.objects.all().delete()
-        ReferralProgram.objects.all().delete()
-        Promoter.objects.all().delete()
-        Referral.objects.all().delete()
-        PromoterCommission.objects.all().delete()
-
 
 class PromoterPayoutRepositoryTestCase(TestCase):
-    def setUp(self):
-        self.referral_program = ReferralProgram.objects.create(
+    @classmethod
+    def setUpTestData(cls):
+        cls.referral_program = ReferralProgram.objects.create(
             name='pr_program', commission_rate=20.00, is_active=True, min_withdrawal_balance=10
         )
-        self.user = User.objects.create_user(username='pr-user', email='pr@example.com', password='Pass123')
-        self.promoter = Promoter.objects.create(user=self.user, referral_token='pr-token')
+        cls.user = User.objects.create_user(username='pr-user', email='pr@example.com', password='Pass123')
+        cls.promoter = Promoter.objects.create(user=cls.user, referral_token='pr-token')
 
     def test_create_payout(self):
         promoter_payout_repository.create_payout(self.promoter, 75, 'wise', tx_signature='tx999')
@@ -700,20 +671,18 @@ class PromoterPayoutRepositoryTestCase(TestCase):
             promoter=self.promoter, amount=75, payout_method='wise', tx_signature='tx999'
         ).exists())
 
-    def tearDown(self):
-        User.objects.all().delete()
-        ReferralProgram.objects.all().delete()
-        Promoter.objects.all().delete()
-        PromoterPayout.objects.all().delete()
-
 
 class PromoterRepositoryEdgeCaseTestCase(TestCase):
-    def setUp(self):
-        self.referral_program = ReferralProgram.objects.create(
+    @classmethod
+    def setUpTestData(cls):
+        cls.referral_program = ReferralProgram.objects.create(
             name='prrepo_program', commission_rate=20.00, is_active=True, min_withdrawal_balance=10
         )
-        self.user = User.objects.create_user(username='prrepo-user', email='prrepo@example.com', password='Pass123')
-        self.promoter = Promoter.objects.create(user=self.user, referral_token='prrepo-token')
+        cls.user = User.objects.create_user(username='prrepo-user', email='prrepo@example.com', password='Pass123')
+        cls.promoter = Promoter.objects.create(user=cls.user, referral_token='prrepo-token')
+
+    def setUp(self):
+        self.promoter.refresh_from_db()
 
     def test_get_by_referral_token_found(self):
         promoter = promoter_repository.get_by_referral_token('prrepo-token')
@@ -730,12 +699,6 @@ class PromoterRepositoryEdgeCaseTestCase(TestCase):
 
         promoters = list(promoter_repository.get_wise_payout_promoters())
         self.assertIn(self.promoter, promoters)
-
-    def tearDown(self):
-        User.objects.all().delete()
-        ReferralProgram.objects.all().delete()
-        Promoter.objects.all().delete()
-        PayoutMethod.objects.all().delete()
 
 
 # ---------------------------------------------------------------------------
@@ -870,24 +833,22 @@ class BaseRepositoryTestCase(TestCase):
         methods = list(self.repo.values_list('method', flat=True))
         self.assertIn('vl', methods)
 
-    def tearDown(self):
-        PayoutMethod.objects.all().delete()
-
 
 # ---------------------------------------------------------------------------
 # Serializer additional tests
 # ---------------------------------------------------------------------------
 
 class SerializerEdgeCaseTestCase(TestCase):
-    def setUp(self):
-        self.referral_program = ReferralProgram.objects.create(
+    @classmethod
+    def setUpTestData(cls):
+        cls.referral_program = ReferralProgram.objects.create(
             name='ser_program', commission_rate=20.00, is_active=True, min_withdrawal_balance=10
         )
-        self.user = User.objects.create_user(username='ser-user', email='ser@example.com', password='Pass123')
-        self.user2 = User.objects.create_user(username='ser-user2', email='ser2@example.com', password='Pass123')
-        self.promoter = Promoter.objects.create(user=self.user, referral_token='ser-token')
-        self.referral = Referral.objects.create(
-            user=self.user2, promoter=self.promoter, status=ReferralStateChoices.ACTIVE
+        cls.user = User.objects.create_user(username='ser-user', email='ser@example.com', password='Pass123')
+        cls.user2 = User.objects.create_user(username='ser-user2', email='ser2@example.com', password='Pass123')
+        cls.promoter = Promoter.objects.create(user=cls.user, referral_token='ser-token')
+        cls.referral = Referral.objects.create(
+            user=cls.user2, promoter=cls.promoter, status=ReferralStateChoices.ACTIVE
         )
 
     def test_get_current_user_with_request(self):
@@ -911,13 +872,6 @@ class SerializerEdgeCaseTestCase(TestCase):
         data = ReferralSerializer(self.referral).data
         self.assertEqual(data['commissionAmount'], 42)
         self.assertEqual(data['commissionStatus'], PromoterCommissionStatusChoices.PENDING)
-
-    def tearDown(self):
-        User.objects.all().delete()
-        ReferralProgram.objects.all().delete()
-        Promoter.objects.all().delete()
-        Referral.objects.all().delete()
-        PromoterCommission.objects.all().delete()
 
 
 # ---------------------------------------------------------------------------
