@@ -4,25 +4,24 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('referrals', '0001_initial'),
+        ("referrals", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='payoutmethod',
-            name='method',
-            field=models.CharField(help_text='Payout method (e.g., wise, crypto, etc.)', max_length=20),
+            model_name="payoutmethod",
+            name="method",
+            field=models.CharField(help_text="Payout method (e.g., wise, crypto, etc.)", max_length=20),
         ),
         migrations.AlterField(
-            model_name='promotercommission',
-            name='invoice_external_id',
-            field=models.CharField(blank=True, help_text='e.g. Chargebee invoice ID', max_length=255, null=True),
+            model_name="promotercommission",
+            name="invoice_external_id",
+            field=models.CharField(blank=True, help_text="e.g. Chargebee invoice ID", max_length=255, null=True),
         ),
         migrations.AlterField(
-            model_name='promoterpayout',
-            name='payout_method',
-            field=models.CharField(help_text='Payout method (e.g., wise, crypto, etc.)', max_length=20),
+            model_name="promoterpayout",
+            name="payout_method",
+            field=models.CharField(help_text="Payout method (e.g., wise, crypto, etc.)", max_length=20),
         ),
     ]

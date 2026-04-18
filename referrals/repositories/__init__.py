@@ -1,8 +1,8 @@
 __all__ = [
-    'referral_repository',
-    'promoter_repository',
-    'promoter_commission_repository',
-    'promoter_payout_repository',
+    "promoter_commission_repository",
+    "promoter_payout_repository",
+    "promoter_repository",
+    "referral_repository",
 ]
 
 from .promoter_commission_repository import promoter_commission_repository

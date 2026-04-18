@@ -1,5 +1,5 @@
 from typing import Any, Dict
-from urllib.parse import urlencode, urlparse, urlunparse, parse_qs
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 
 def append_query_params(url: str, params: Dict[str, Any]) -> str:

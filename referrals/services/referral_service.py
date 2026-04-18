@@ -1,9 +1,9 @@
 from __future__ import annotations
 
-import hashlib
-import logging
 from collections import defaultdict
 from datetime import datetime, timedelta
+import hashlib
+import logging
 from typing import Optional
 
 from django.contrib.auth.models import User
@@ -16,7 +16,7 @@ from django.utils import timezone
 
 from referrals.choices import ReferralStateChoices
 from referrals.config import config
-from referrals.models import PromoterCommission, Promoter
+from referrals.models import Promoter, PromoterCommission
 from referrals.serializers import PromoterCommissionSerializer
 from referrals.services.promoter_payout_service import promoter_payout_service
 from referrals.utils import append_query_params
@@ -31,9 +31,14 @@ class ReferralService:
     """
 
     @staticmethod
-    def send_referral_invitation_email(emails_to: list[str], invitation_link: str,
-                                       promoter_full_name: str, subject: str, template_path: str,
-                                       from_email: str = config.BASE_EMAIL) -> bool:
+    def send_referral_invitation_email(
+        emails_to: list[str],
+        invitation_link: str,
+        promoter_full_name: str,
+        subject: str,
+        template_path: str,
+        from_email: str = config.BASE_EMAIL,
+    ) -> bool:
         """
         Sends an HTML email with an invitation link to the specified email addresses.
 
@@ -168,9 +173,9 @@ class ReferralService:
             return None
 
     @staticmethod
-    def handle_purchase_subscription(user: User,
-                                     amount_paid: int,
-                                     invoice_external_id: Optional[int] = None) -> Optional[PromoterCommission]:
+    def handle_purchase_subscription(
+        user: User, amount_paid: int, invoice_external_id: Optional[int] = None
+    ) -> Optional[PromoterCommission]:
         """
         Handles the process of updating a referral subscription status to 'Active'
         when a subscription is created for a referred user.
@@ -197,8 +202,9 @@ class ReferralService:
 
     @staticmethod
     @transaction.atomic
-    def handle_user_refund(user: User, amount_refunded: int, amount_paid: int,
-                           invoice_external_id: Optional[int] = None) -> Optional[PromoterCommission]:
+    def handle_user_refund(
+        user: User, amount_refunded: int, amount_paid: int, invoice_external_id: Optional[int] = None
+    ) -> Optional[PromoterCommission]:
         """
         Handles the process of refunding a referred user's subscription.
 
@@ -219,8 +225,9 @@ class ReferralService:
             if user.referral.status == ReferralStateChoices.ACTIVE:
                 user.referral.status = ReferralStateChoices.REFUND
                 user.referral.save()
-                commission = promoter_payout_service.calculate_refund(user.referral, amount_refunded, amount_paid,
-                                                                      invoice_external_id)
+                commission = promoter_payout_service.calculate_refund(
+                    user.referral, amount_refunded, amount_paid, invoice_external_id
+                )
                 logger.info(f"User {user.email} has been refunded {amount_refunded}.")
                 return commission
         except ObjectDoesNotExist:

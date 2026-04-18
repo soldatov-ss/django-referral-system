@@ -1,17 +1,10 @@
 from rest_framework import serializers
 
-from referrals.models import (
-    PayoutMethod,
-    Promoter,
-    PromoterCommission,
-    PromoterPayout,
-    Referral, ReferralProgram,
-)
+from referrals.models import PayoutMethod, Promoter, PromoterCommission, PromoterPayout, Referral, ReferralProgram
 from referrals.repositories.promoter_commission_repository import promoter_commission_repository
 
 
 class CamelCaseSerializer(serializers.ModelSerializer):
-
     def get_current_user(self):
         user = None
         request = self.context.get("request")
@@ -113,4 +106,4 @@ class PromoterPayoutsSerializer(CamelCaseSerializer):
 
 class MinWithdrawalBalanceSerializer(PromoterSerializer):
     class Meta(PromoterSerializer.Meta):
-        fields = ['min_withdrawal_balance']
+        fields = ["min_withdrawal_balance"]
