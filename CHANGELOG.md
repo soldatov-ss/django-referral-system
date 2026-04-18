@@ -5,6 +5,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+## [0.2.1] - 2026-04-18
+
+### Fixed
+- Replace hardcoded `auth.User` with `settings.AUTH_USER_MODEL` in `Promoter` and `Referral` models so the package works with custom user models
+- Use `get_user_model()` instead of importing `auth.User` directly in views and services
+- Use `getattr` fallback for `user.email` in `Promoter.__str__` and `ReferralSerializer` to avoid `AttributeError` on user models without an email field
+- Raise `ImproperlyConfigured` with a clear message when `BASE_REFERRAL_LINK` is not set, instead of silently producing broken referral links
+
 ## [0.2.0] - 2026-04-18
 
 ### Added

@@ -47,7 +47,7 @@ class ReferralSerializer(CamelCaseSerializer):
         )
 
     def get_email(self, obj):
-        return obj.user.email
+        return getattr(obj.user, "email", "")
 
     def get_user_id(self, obj):
         return obj.user.id
