@@ -1,6 +1,6 @@
 import logging
 
-from django.contrib.auth.models import User
+from django.contrib.auth import get_user_model
 from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.pagination import PageNumberPagination
@@ -22,6 +22,7 @@ from referrals.serializers import (
 from referrals.services import promoter_service, referral_service
 
 logger = logging.getLogger(__name__)
+User = get_user_model()
 
 
 class ReferralsPagination(PageNumberPagination):
