@@ -9,33 +9,34 @@ list:
 
 # Run all the formatting, linting, and testing commands
 qa: ## Run formatting, linting, and tests
-	uv run --python=3.11 --extra test ruff format .
-	uv run --python=3.11 --extra test ruff check . --fix
-	uv run --python=3.11 --extra test ruff check --select I --fix .
-	uv run --python=3.11 --extra test pytest .
+	uv run --python=3.12 --extra test ruff format .
+	uv run --python=3.12 --extra test ruff check . --fix
+	uv run --python=3.12 --extra test ruff check --select I --fix .
+	uv run --python=3.12 --extra test pytest .
 
 # Run all the tests for all the supported Python versions
 testall: ## Run tests on all supported Python versions
-	uv run --python=3.8  --extra test pytest
 	uv run --python=3.9  --extra test pytest
 	uv run --python=3.10 --extra test pytest
 	uv run --python=3.11 --extra test pytest
+	uv run --python=3.12 --extra test pytest
+	uv run --python=3.13 --extra test pytest
 
 # Run tests, pass extra args via ARGS="..." (e.g. make test ARGS="-k test_foo")
 test: ## Run tests (ARGS=... to pass pytest arguments)
 	@echo "Running with args: $(ARGS)"
-	uv run --python=3.11 --extra test pytest $(ARGS)
+	uv run --python=3.12 --extra test pytest $(ARGS)
 
 # Drop into IPython debugger on first failure
 pdb: ## Run tests with IPython pdb on failure (ARGS=... supported)
 	@echo "Running with args: $(ARGS)"
-	uv run --python=3.11 --extra test pytest --pdb --maxfail=10 --pdbcls=IPython.terminal.debugger:TerminalPdb $(ARGS)
+	uv run --python=3.12 --extra test pytest --pdb --maxfail=10 --pdbcls=IPython.terminal.debugger:TerminalPdb $(ARGS)
 
 # Run coverage and build HTML report
 coverage: ## Run coverage and generate HTML report
-	uv run --python=3.11 --extra test coverage run -m pytest .
-	uv run --python=3.11 --extra test coverage report -m
-	uv run --python=3.11 --extra test coverage html
+	uv run --python=3.12 --extra test coverage run -m pytest .
+	uv run --python=3.12 --extra test coverage report -m
+	uv run --python=3.12 --extra test coverage html
 
 # Build the distribution
 build: clean-build ## Build source and wheel distributions

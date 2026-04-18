@@ -3,10 +3,13 @@
 [![CI](https://github.com/soldatov-ss/django-referral-system/actions/workflows/ci.yml/badge.svg)](https://github.com/soldatov-ss/django-referral-system/actions/workflows/ci.yml)
 [![PyPI version](https://badge.fury.io/py/django-referral-system.svg)](https://badge.fury.io/py/django-referral-system)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/soldatov-ss/django-referral-system/blob/main/LICENSE)
-[![Python Versions](https://img.shields.io/badge/python-3.8%20|%203.9%20|%203.10%20|%203.11-blue.svg)](https://pypi.org/project/django-referral-system/)
+[![Python Versions](https://img.shields.io/badge/python-3.9%20|%203.10%20|%203.11%20|%203.12%20|%203.13-blue.svg)](https://pypi.org/project/django-referral-system/)
 [![Coverage Status](https://coveralls.io/repos/github/soldatov-ss/django-referral-system/badge.svg?branch=main)](https://coveralls.io/github/soldatov-ss/django-referral-system?branch=main)
 
 A Django app for managing referral programs, promoters, referrals, and tracking referral performance with features like commission setting, invitation management, and Wise payouts.
+
+Supported Python versions: 3.9, 3.10, 3.11, 3.12, and 3.13.
+
 ## Documentation
 
 Full documentation is available at [Read the Docs](https://django-referral-system.readthedocs.io/en/latest/index.html).
@@ -31,6 +34,8 @@ Full documentation is available at [Read the Docs](https://django-referral-syste
 ```bash
 pip install django-referral-system
 ```
+
+The package supports Python 3.9 through 3.13.
 
 2. Add referrals to your INSTALLED_APPS in settings.py:
 

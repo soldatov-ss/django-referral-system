@@ -14,7 +14,17 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10", "3.11"]
+        include:
+          - python-version: "3.9"
+            coverage: false
+          - python-version: "3.10"
+            coverage: false
+          - python-version: "3.11"
+            coverage: false
+          - python-version: "3.12"
+            coverage: true
+          - python-version: "3.13"
+            coverage: false
 
     steps:
       - name: Checkout code
@@ -42,7 +52,7 @@ jobs:
           python test_app/manage.py migrate --noinput
 
       - name: Run tests with coverage
-        if: matrix.python-version == '3.11'
+        if: matrix.coverage
         run: |
           pip install 'coverage<8' 'coveralls<4'
           coverage run --source='referrals' test_app/manage.py test referrals
@@ -50,12 +60,12 @@ jobs:
           coverage xml
 
       - name: Run tests
-        if: matrix.python-version != '3.11'
+        if: ${{ !matrix.coverage }}
         run: |
           python test_app/manage.py test referrals
 
       - name: Upload coverage to Coveralls
-        if: matrix.python-version == '3.11'
+        if: matrix.coverage
         uses: coverallsapp/github-action@v2.3.6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}

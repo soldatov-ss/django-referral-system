@@ -1,14 +1,14 @@
-from typing import Any, Dict
+from typing import Any
 from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 
-def append_query_params(url: str, params: Dict[str, Any]) -> str:
+def append_query_params(url: str, params: dict[str, Any]) -> str:
     """
     Appends query parameters to a given URL.
 
     Args:
         url (str): The base URL to which query parameters will be added.
-        params (Dict[str, Any]): A dictionary of query parameters to add to the URL.
+        params (dict[str, Any]): A dictionary of query parameters to add to the URL.
 
     Returns:
         str: The modified URL with the new query parameters appended.
