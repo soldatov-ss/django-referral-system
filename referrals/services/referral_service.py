@@ -10,6 +10,7 @@ from django.core.mail import EmailMessage
 from django.db import transaction
 from django.template.exceptions import TemplateDoesNotExist
 from django.template.loader import get_template
+from django.utils import timezone
 
 from referrals.choices import ReferralStateChoices
 from referrals.config import config
@@ -81,7 +82,7 @@ class ReferralService:
         Returns:
             list[dict]: A list of serialized commission data for the user's earnings.
         """
-        seven_days_ago = datetime.today().date() - timedelta(days=6)
+        seven_days_ago = timezone.now() - timedelta(days=6)
         earnings = PromoterCommission.objects.filter(promoter__user=user, created__gte=seven_days_ago)
         serializer = PromoterCommissionSerializer(earnings, many=True)
         return serializer.data
@@ -121,7 +122,7 @@ class ReferralService:
         Returns:
             list[dict]: A list of dictionaries, each containing the day (as a string) and the corresponding earnings value.
         """
-        today = datetime.today()
+        today = timezone.now()
         last_7_days = [(today - timedelta(days=i)).strftime("%a") for i in range(6, -1, -1)]
         earnings_by_day = ReferralService.aggregate_earnings_by_day(earnings)
         statistics = [{"day": day[:2], "value": earnings_by_day.get(day, 0)} for day in last_7_days]
@@ -157,9 +158,9 @@ class ReferralService:
         """
         try:
             user = User.objects.select_related("referral__promoter__user").filter(pk=user_id).first()
+            if user is None:
+                return None
             return user.referral.promoter
-        except User.DoesNotExist:
-            return None
         except ObjectDoesNotExist:
             logger.error("User does not have referral relation")
             return None
