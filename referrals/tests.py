@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from decimal import Decimal
 import math
 import sys
+from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 from django.contrib.auth.models import User
@@ -856,6 +857,10 @@ class SerializerEdgeCaseTestCase(TestCase):
         self.assertEqual(data["commissionAmount"], 42)
         self.assertEqual(data["commissionStatus"], PromoterCommissionStatusChoices.PENDING)
 
+    def test_referral_serializer_get_email_fallback_when_user_has_no_email(self):
+        obj = SimpleNamespace(user=SimpleNamespace(pk=99))
+        self.assertEqual(ReferralSerializer().get_email(obj), "")
+
 
 # ---------------------------------------------------------------------------
 # Utils, helpers, decorators, enums, and model tests
@@ -956,3 +961,37 @@ class ModelStrTestCase(TestCase):
         )
 
         self.assertEqual(str(promoter), "model@example.com - https://example.com/ref?ref=model-token")
+
+    def test_promoter_str_falls_back_to_pk_when_no_email(self):
+        user = User.objects.create_user(username="noem-user", password="Pass123")
+        promoter = Promoter.objects.create(
+            user=user,
+            referral_token="noem-token",
+            referral_link="https://example.com/ref?ref=noem-token",
+        )
+        mock_user = SimpleNamespace(pk=42)
+        Promoter._meta.get_field("user").set_cached_value(promoter, mock_user)
+        self.assertEqual(str(promoter), "42 - https://example.com/ref?ref=noem-token")
+
+
+# ---------------------------------------------------------------------------
+# Config tests
+# ---------------------------------------------------------------------------
+
+
+class ConfigTestCase(TestCase):
+    def test_base_referral_link_raises_improperly_configured_when_none(self):
+        from django.core.exceptions import ImproperlyConfigured
+        from referrals.config import Config
+
+        cfg = Config()
+        cfg.BASE_REFERRAL_LINK = None
+        with self.assertRaises(ImproperlyConfigured):
+            _ = cfg.BASE_REFERRAL_LINK
+
+    def test_base_email_does_not_raise_when_none(self):
+        from referrals.config import Config
+
+        cfg = Config()
+        cfg.BASE_EMAIL = None
+        self.assertIsNone(cfg.BASE_EMAIL)
