@@ -1,4 +1,4 @@
-VERSION := $(shell grep -m1 '^version' setup.cfg | sed -E 's/version = (.*)/\1/')
+VERSION := $(shell grep -m1 '^version' pyproject.toml | sed -E 's/version = "(.*)"/\1/')
 
 .PHONY: list qa testall test pdb coverage build version publish tag \
         clean clean-build clean-pyc clean-test

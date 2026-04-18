@@ -52,6 +52,7 @@ Homepage = "https://github.com/soldatov-ss/django-referral-system"
 
 [tool.setuptools]
 include-package-data = false
+license-files = []
 
 [tool.setuptools.packages.find]
 where = ["."]
