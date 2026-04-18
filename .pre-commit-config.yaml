@@ -1,0 +1,32 @@
+ci:
+  autoupdate_schedule: monthly
+
+default_language_version:
+  python: python3.8
+
+repos:
+  - repo: https://github.com/adamchainz/django-upgrade
+    rev: 1.21.0
+    hooks:
+      - id: django-upgrade
+        args: [--target-version, "4.2"]
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: check-added-large-files
+      - id: check-case-conflict
+      - id: check-json
+      - id: check-merge-conflict
+      - id: check-symlinks
+      - id: check-toml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.15.11
+    hooks:
+      - id: ruff-check
+        args: [ "--config=pyproject.toml", "--fix" ]
+      - id: ruff-format
+        args: [ "--config=pyproject.toml" ]

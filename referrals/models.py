@@ -2,14 +2,12 @@ from decimal import Decimal
 
 from django.contrib.auth.models import User
 from django.core.validators import MinValueValidator
-from django.db import models
-from django.db import transaction
+from django.db import models, transaction
 from django.db.models import Sum
 from django.utils import timezone
 from django.utils.functional import cached_property
 
-from referrals.choices import InvitationMethodChoices, ReferralStateChoices, \
-    PromoterCommissionStatusChoices
+from referrals.choices import InvitationMethodChoices, PromoterCommissionStatusChoices, ReferralStateChoices
 
 
 class TimeStampedModel(models.Model):
@@ -81,12 +79,7 @@ class Promoter(TimeStampedModel):
 
     @cached_property
     def total_paid(self) -> int:
-        return (
-                self.promoter_payouts.aggregate(
-                    total=Sum("amount")
-                )["total"]
-                or 0
-        )
+        return self.promoter_payouts.aggregate(total=Sum("amount"))["total"] or 0
 
     @cached_property
     def current_balance(self) -> int:

@@ -1,14 +1,13 @@
 import logging
 
 from referrals.choices import PromoterCommissionStatusChoices
-from referrals.models import Promoter, Referral, PromoterCommission
+from referrals.models import Promoter, PromoterCommission, Referral
 from referrals.repositories.base_repository import BaseRepository
 
 logger = logging.getLogger(__name__)
 
 
 class PromoterCommissionRepository(BaseRepository):
-
     def mark_commission_paid(self, promoter: Promoter):
         self.filter(
             promoter=promoter,
@@ -23,7 +22,7 @@ class PromoterCommissionRepository(BaseRepository):
     def get_referral_positive_commission(self, referral: Referral):
         query = self.filter(
             referral=referral,
-            status__in=[PromoterCommissionStatusChoices.PENDING, PromoterCommissionStatusChoices.PAID]
+            status__in=[PromoterCommissionStatusChoices.PENDING, PromoterCommissionStatusChoices.PAID],
         )
         return query.first()
 

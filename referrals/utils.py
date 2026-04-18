@@ -1,5 +1,5 @@
 from typing import Any, Dict
-from urllib.parse import urlencode, urlparse, urlunparse, parse_qs
+from urllib.parse import parse_qs, urlencode, urlparse, urlunparse
 
 
 def append_query_params(url: str, params: Dict[str, Any]) -> str:
@@ -17,10 +17,7 @@ def append_query_params(url: str, params: Dict[str, Any]) -> str:
     query = dict(parse_qs(url_parts[4]))
     for key, value in params.items():
         if key in query:
-            if isinstance(query[key], list):
-                query[key].extend([value] if not isinstance(value, list) else value)
-            else:
-                query[key] = [query[key]] + ([value] if not isinstance(value, list) else value)
+            query[key].extend([value] if not isinstance(value, list) else value)
         else:
             query[key] = [value] if not isinstance(value, list) else value
 

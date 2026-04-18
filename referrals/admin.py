@@ -1,7 +1,6 @@
 from django.contrib import admin
 
-from referrals.models import ReferralProgram, PayoutMethod, Referral, Promoter, PromoterCommission, \
-    PromoterPayout
+from referrals.models import PayoutMethod, Promoter, PromoterCommission, PromoterPayout, Referral, ReferralProgram
 
 
 @admin.register(ReferralProgram)

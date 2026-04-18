@@ -1,7 +1,8 @@
+from __future__ import annotations
+
 import asyncio
-from collections.abc import Callable, Coroutine
 from functools import wraps
-from typing import Any, TypeVar
+from typing import Any, Callable, Coroutine, TypeVar
 
 T = TypeVar("T")
 
@@ -11,9 +12,7 @@ def sync_to_async(method: Callable[..., T]) -> Callable[..., Coroutine]:
     async def async_wrapper(self: Any, *args: Any, **kwargs: Any) -> Any:
         if not asyncio.iscoroutinefunction(method):
             loop = asyncio.get_running_loop()
-            return await loop.run_in_executor(
-                None, lambda: method(self, *args, **kwargs)
-            )
+            return await loop.run_in_executor(None, lambda: method(self, *args, **kwargs))
 
         return await method(self, *args, **kwargs)
 

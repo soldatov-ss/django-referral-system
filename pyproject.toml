@@ -1,3 +1,110 @@
 [build-system]
-requires = ['setuptools>=72.2.0']
-build-backend = 'setuptools.build_meta'
+requires = ["setuptools>=72.2.0,<75.0.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "django-referral-system"
+version = "0.2.0"
+description = "A Django app for managing referral programs, promoters, referrals, and tracking referral performance with advanced features like commission setting, invitation management, and Wise payouts."
+readme = "README.md"
+license = { text = "MIT" }
+authors = [{ name = "Soldatov Serhii", email = "soldatov.own@gmail.com" }]
+requires-python = ">=3.8,<3.12"
+classifiers = [
+    "Environment :: Web Environment",
+    "Framework :: Django",
+    "Framework :: Django :: 4",
+    "Framework :: Django :: 5",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3 :: Only",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
+]
+dependencies = [
+    "Django>=4.2,<5.0",
+    "djangorestframework>=3.14,<3.16",
+    "numpy>=1.23.2,<2.0",
+    "pandas>=2.0,<2.1",
+    "pydantic>=2.0,<2.11",
+    "python-dotenv>=1.0,<1.1",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-django",
+    "pytest-cov",
+    "coverage",
+    "ruff",
+    "ipython",
+]
+
+[project.urls]
+Homepage = "https://github.com/soldatov-ss/django-referral-system"
+
+[tool.setuptools]
+include-package-data = false
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["referrals*"]
+exclude = ["*.tests", "*.tests.*"]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "test_app.settings"
+pythonpath = [".", "test_app"]
+testpaths = ["referrals"]
+python_files = ["tests.py", "test_*.py"]
+addopts = "--tb=short -q"
+
+
+[tool.ruff.format]
+quote-style = "double"
+indent-style = "space"
+line-ending = "auto"
+
+[tool.ruff]
+line-length = 120
+target-version = "py38"
+indent-width = 4
+lint.ignore = [
+    "E501",   # line too long — handled by formatter
+    "B904",
+    "N806", "N801", "N817", "N818", "N815",  # naming — intentional deviations
+    "C901", "C417", "C414",
+    "F403",
+    "RUF005", "RUF012", "RUF015",  # RUF012 common in Django Meta classes
+]
+lint.exclude = [
+    'venv', '.git',
+    '.idea', '__pycache__',
+    '**/migrations/**', 'scripts/',
+    '**/tests/**',
+    '**/tests.py',
+]
+lint.select = [
+    "I", # isort
+    "E", # pycodestyle errors
+    "W", # pycodestyle warnings
+    "F", # pyflakes
+    "C", # complexity
+    "N", # pep8-naming
+    "RUF", # ruff
+    "B", # flake8-bugbear
+    "C4", # flake8-comprehensions
+    "ISC", # flake8-implicit-str-concat
+    "PIE", # flake8-pie
+    "PT", # flake-pytest-style
+]
+
+[tool.ruff.lint.isort]
+force-sort-within-sections = true
+split-on-trailing-comma = false

@@ -7,19 +7,17 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 from rest_framework.status import HTTP_200_OK, HTTP_201_CREATED
 
-from referrals.choices import (
-    InvitationMethodChoices,
-    ReferralStateChoices,
-)
+from referrals.choices import InvitationMethodChoices, ReferralStateChoices
 from referrals.exceptions import ViewException
 from referrals.models import PayoutMethod, PromoterPayout, ReferralProgram
 from referrals.repositories.promoter_repository import promoter_repository
 from referrals.repositories.referral_repository import referral_repository
 from referrals.serializers import (
+    MinWithdrawalBalanceSerializer,
     PayoutMethodSerializer,
     PromoterPayoutsSerializer,
     PromoterSerializer,
-    ReferralSerializer, MinWithdrawalBalanceSerializer,
+    ReferralSerializer,
 )
 from referrals.services import promoter_service, referral_service
 
@@ -107,7 +105,8 @@ class ReferralProgramViewSet(
         if min_withdrawal_balance < program_min_withdrawal_balance:
             raise ViewException(
                 f"Min withdrawal balance must be greater than or equal to the referral program's min withdrawal balance ({program_min_withdrawal_balance}).",
-                status_code=400)
+                status_code=400,
+            )
 
         promoter.min_withdrawal_balance = min_withdrawal_balance
         promoter.save()

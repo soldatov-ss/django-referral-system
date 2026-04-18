@@ -55,7 +55,7 @@ urlpatterns = [
 python manage.py migrate
 ```
 
-5. Create a Referral Program    
+5. Create a Referral Program
 After installation, you can create a new referral program using the provided management command:
 If this program is set to active, any previous active referral programs will be deactivated automatically.
 ```bash

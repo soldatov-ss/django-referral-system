@@ -17,8 +17,9 @@ class PromoterService:
 
     def create_new_promoter(self, user: User) -> Promoter:
         referral_token = referral_service.generate_referral_token(user_id=user.id)
-        referral_link = referral_service.generate_referral_link(base_referral_link=config.BASE_REFERRAL_LINK,
-                                                                referral_token=referral_token)
+        referral_link = referral_service.generate_referral_link(
+            base_referral_link=config.BASE_REFERRAL_LINK, referral_token=referral_token
+        )
 
         promoter = Promoter(
             user=user,

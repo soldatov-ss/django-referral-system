@@ -1,6 +1,6 @@
 __all__ = [
-    'promoter_service',
-    'referral_service',
+    "promoter_service",
+    "referral_service",
 ]
 
 from .promoter_service import promoter_service

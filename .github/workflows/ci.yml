@@ -11,15 +11,19 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.8", "3.9", "3.10", "3.11"]
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v6
 
       - name: Set up Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v6
         with:
-          python-version: '3.9'
+          python-version: ${{ matrix.python-version }}
 
       - name: Uninstall globally installed referrals (if any)
         run: |
@@ -29,7 +33,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -e .  # Install the package in editable mode
-          pip install coverage coveralls
 
       - name: Set environment variables
         run: echo "BASE_REFERRAL_LINK=http://localhost:8000/" >> $GITHUB_ENV
@@ -39,13 +42,21 @@ jobs:
           python test_app/manage.py migrate --noinput
 
       - name: Run tests with coverage
+        if: matrix.python-version == '3.11'
         run: |
+          pip install 'coverage<8' 'coveralls<4'
           coverage run --source='referrals' test_app/manage.py test referrals
           coverage report
           coverage xml
 
+      - name: Run tests
+        if: matrix.python-version != '3.11'
+        run: |
+          python test_app/manage.py test referrals
+
       - name: Upload coverage to Coveralls
-        uses: coverallsapp/github-action@v2.3.0
+        if: matrix.python-version == '3.11'
+        uses: coverallsapp/github-action@v2.3.6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
         env:

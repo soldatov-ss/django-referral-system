@@ -1,8 +1,10 @@
-import hashlib
-import logging
+from __future__ import annotations
+
 from collections import defaultdict
 from datetime import datetime, timedelta
-from typing import Optional
+import hashlib
+import logging
+from typing import Dict, List, Optional
 
 from django.contrib.auth.models import User
 from django.core.exceptions import ObjectDoesNotExist
@@ -10,10 +12,11 @@ from django.core.mail import EmailMessage
 from django.db import transaction
 from django.template.exceptions import TemplateDoesNotExist
 from django.template.loader import get_template
+from django.utils import timezone
 
 from referrals.choices import ReferralStateChoices
 from referrals.config import config
-from referrals.models import PromoterCommission, Promoter
+from referrals.models import Promoter, PromoterCommission
 from referrals.serializers import PromoterCommissionSerializer
 from referrals.services.promoter_payout_service import promoter_payout_service
 from referrals.utils import append_query_params
@@ -28,9 +31,14 @@ class ReferralService:
     """
 
     @staticmethod
-    def send_referral_invitation_email(emails_to: list[str], invitation_link: str,
-                                       promoter_full_name: str, subject: str, template_path: str,
-                                       from_email: str = config.BASE_EMAIL) -> bool:
+    def send_referral_invitation_email(
+        emails_to: List[str],
+        invitation_link: str,
+        promoter_full_name: str,
+        subject: str,
+        template_path: str,
+        from_email: str = config.BASE_EMAIL,
+    ) -> bool:
         """
         Sends an HTML email with an invitation link to the specified email addresses.
 
@@ -81,13 +89,13 @@ class ReferralService:
         Returns:
             list[dict]: A list of serialized commission data for the user's earnings.
         """
-        seven_days_ago = datetime.today().date() - timedelta(days=6)
+        seven_days_ago = timezone.now() - timedelta(days=6)
         earnings = PromoterCommission.objects.filter(promoter__user=user, created__gte=seven_days_ago)
         serializer = PromoterCommissionSerializer(earnings, many=True)
         return serializer.data
 
     @staticmethod
-    def aggregate_earnings_by_day(earnings: list[dict]) -> dict[str, int]:
+    def aggregate_earnings_by_day(earnings: List[dict]) -> Dict[str, int]:
         """
         Aggregates earnings by the day of the week.
 
@@ -108,7 +116,7 @@ class ReferralService:
         return earnings_by_day
 
     @staticmethod
-    def get_last_7_days_earnings(earnings: list[dict]) -> list[dict]:
+    def get_last_7_days_earnings(earnings: List[dict]) -> List[dict]:
         """
         Retrieves the earnings statistics for the last 7 days.
 
@@ -121,7 +129,7 @@ class ReferralService:
         Returns:
             list[dict]: A list of dictionaries, each containing the day (as a string) and the corresponding earnings value.
         """
-        today = datetime.today()
+        today = timezone.now()
         last_7_days = [(today - timedelta(days=i)).strftime("%a") for i in range(6, -1, -1)]
         earnings_by_day = ReferralService.aggregate_earnings_by_day(earnings)
         statistics = [{"day": day[:2], "value": earnings_by_day.get(day, 0)} for day in last_7_days]
@@ -157,17 +165,17 @@ class ReferralService:
         """
         try:
             user = User.objects.select_related("referral__promoter__user").filter(pk=user_id).first()
+            if user is None:
+                return None
             return user.referral.promoter
-        except User.DoesNotExist:
-            return None
         except ObjectDoesNotExist:
             logger.error("User does not have referral relation")
             return None
 
     @staticmethod
-    def handle_purchase_subscription(user: User,
-                                     amount_paid: int,
-                                     invoice_external_id: Optional[int] = None) -> Optional[PromoterCommission]:
+    def handle_purchase_subscription(
+        user: User, amount_paid: int, invoice_external_id: Optional[int] = None
+    ) -> Optional[PromoterCommission]:
         """
         Handles the process of updating a referral subscription status to 'Active'
         when a subscription is created for a referred user.
@@ -194,8 +202,9 @@ class ReferralService:
 
     @staticmethod
     @transaction.atomic
-    def handle_user_refund(user: User, amount_refunded: int, amount_paid: int,
-                           invoice_external_id: Optional[int] = None) -> Optional[PromoterCommission]:
+    def handle_user_refund(
+        user: User, amount_refunded: int, amount_paid: int, invoice_external_id: Optional[int] = None
+    ) -> Optional[PromoterCommission]:
         """
         Handles the process of refunding a referred user's subscription.
 
@@ -216,8 +225,9 @@ class ReferralService:
             if user.referral.status == ReferralStateChoices.ACTIVE:
                 user.referral.status = ReferralStateChoices.REFUND
                 user.referral.save()
-                commission = promoter_payout_service.calculate_refund(user.referral, amount_refunded, amount_paid,
-                                                                      invoice_external_id)
+                commission = promoter_payout_service.calculate_refund(
+                    user.referral, amount_refunded, amount_paid, invoice_external_id
+                )
                 logger.info(f"User {user.email} has been refunded {amount_refunded}.")
                 return commission
         except ObjectDoesNotExist:

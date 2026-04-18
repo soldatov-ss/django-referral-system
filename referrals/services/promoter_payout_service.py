@@ -1,6 +1,6 @@
+from decimal import Decimal
 import logging
 import math
-from decimal import Decimal
 from typing import Optional
 
 import pandas as pd
@@ -9,9 +9,13 @@ from pydantic import BaseModel
 from referrals.choices import PromoterCommissionStatusChoices
 from referrals.exceptions import ViewException
 from referrals.helpers import parse_df_to_csv_string_without_index_col
-from referrals.models import Promoter, PromoterPayout, PromoterCommission, Referral
-from referrals.repositories import promoter_repository, promoter_payout_repository, promoter_commission_repository, \
-    referral_repository
+from referrals.models import Promoter, PromoterCommission, PromoterPayout, Referral
+from referrals.repositories import (
+    promoter_commission_repository,
+    promoter_payout_repository,
+    promoter_repository,
+    referral_repository,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -54,17 +58,15 @@ class PromoterPayoutService:
                 )
 
                 data.append(payout_data_row.model_dump())
-                promoter_payout_repository.create_payout(
-                    promoter, promoter.current_balance, payout_method='wise'
-                )
+                promoter_payout_repository.create_payout(promoter, promoter.current_balance, payout_method="wise")
                 promoter_commission_repository.mark_commission_paid(promoter)
         if data:
             df = pd.DataFrame(data)
             return parse_df_to_csv_string_without_index_col(df)
 
-    def calculate_commission(self, user_id: int,
-                             amount_paid: int,
-                             invoice_external_id: Optional[int] = None) -> Optional[PromoterCommission]:
+    def calculate_commission(
+        self, user_id: int, amount_paid: int, invoice_external_id: Optional[int] = None
+    ) -> Optional[PromoterCommission]:
         """
         Calculates and creates a commission for a promoter based on the referral's payment.
 
@@ -97,9 +99,9 @@ class PromoterPayoutService:
             )
         return commission
 
-    def create_commission(self, referral: Referral,
-                          amount_paid: int,
-                          invoice_external_id: Optional[int] = None) -> Optional[PromoterCommission]:
+    def create_commission(
+        self, referral: Referral, amount_paid: int, invoice_external_id: Optional[int] = None
+    ) -> Optional[PromoterCommission]:
         """
         Creates a new commission entry for a promoter based on a referral's payment.
 
@@ -160,8 +162,9 @@ class PromoterPayoutService:
         PromoterCommission.objects.filter(promoter=promoter, status="pending").update(status="paid")
 
     @staticmethod
-    def calculate_refund(referral: Referral, amount_refunded: int, amount_paid: int,
-                         invoice_external_id: Optional[int] = None) -> PromoterCommission:
+    def calculate_refund(
+        referral: Referral, amount_refunded: int, amount_paid: int, invoice_external_id: Optional[int] = None
+    ) -> PromoterCommission:
         """
         Calculates the refund amount for a promoter's commission and creates a refund record.
 
@@ -179,10 +182,7 @@ class PromoterPayoutService:
         """
         referral_commission = promoter_commission_repository.get_referral_positive_commission(referral)
         if not referral_commission:
-            raise ViewException(
-                f"No commission found for referral with id {referral.id}.",
-                status_code=404
-            )
+            raise ViewException(f"No commission found for referral with id {referral.id}.", status_code=404)
 
         commission_paid = referral_commission.amount
         commission_refund_amount = -math.floor(commission_paid * amount_refunded / amount_paid)

@@ -125,4 +125,3 @@ These variables are necessary for generating the referral link and setting the "
     .. code-block:: bash
 
         GET http://localhost:8000/?ref=6B86B273FF&ref-source=email
-
