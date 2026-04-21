@@ -36,6 +36,9 @@ jobs:
           - python-version: "3.13"
             django-version: "5.2"
             coverage: false
+          - python-version: "3.14"
+            django-version: "5.2"
+            coverage: false
 
     steps:
       - name: Checkout code

@@ -9,7 +9,7 @@ description = "A Django app for managing referral programs, promoters, referrals
 readme = "README.md"
 license = { text = "MIT" }
 authors = [{ name = "Soldatov Serhii", email = "soldatov.own@gmail.com" }]
-requires-python = ">=3.9,<3.14"
+requires-python = ">=3.9,<3.15"
 classifiers = [
     "Environment :: Web Environment",
     "Framework :: Django",
@@ -30,6 +30,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Internet :: WWW/HTTP",
     "Topic :: Internet :: WWW/HTTP :: Dynamic Content",
 ]

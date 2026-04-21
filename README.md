@@ -3,7 +3,7 @@
 [![CI](https://github.com/soldatov-ss/django-referral-system/actions/workflows/ci.yml/badge.svg)](https://github.com/soldatov-ss/django-referral-system/actions/workflows/ci.yml)
 [![PyPI version](https://badge.fury.io/py/django-referral-system.svg)](https://badge.fury.io/py/django-referral-system)
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/soldatov-ss/django-referral-system/blob/main/LICENSE)
-[![Python Versions](https://img.shields.io/badge/python-3.9%20|%203.10%20|%203.11%20|%203.12%20|%203.13-blue.svg)](https://pypi.org/project/django-referral-system/)
+[![Python Versions](https://img.shields.io/badge/python-3.9%20|%203.10%20|%203.11%20|%203.12%20|%203.13%20|%203.14-blue.svg)](https://pypi.org/project/django-referral-system/)
 [![Coverage Status](https://coveralls.io/repos/github/soldatov-ss/django-referral-system/badge.svg?branch=main)](https://coveralls.io/github/soldatov-ss/django-referral-system?branch=main)
 
 **A plug-and-play Django referral engine.** Track promoters, reward commissions, manage payouts — all wired up in minutes.
@@ -35,7 +35,7 @@ Only one referral program can be active at a time, keeping the logic focused and
 pip install django-referral-system
 ```
 
-Requires Python 3.9 – 3.13 and Django 4.2+.
+Requires Python 3.9 – 3.14 and Django 4.2+.
 
 **2. Add to `INSTALLED_APPS`**
 
