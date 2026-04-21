@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.2] - 2026-04-21
+
+### Added
+- Python 3.14 support: updated `requires-python`, classifiers, CI matrix, and documentation
+- CI now tests Django 5.0, 5.1, and 5.2 across the full Python support matrix
+- Require `pydantic>=2.11` on Python 3.14+ (PyO3 0.23 is the first release with Python 3.14 support)
+
 ## [0.3.1] - 2026-04-18
 
 ### Fixed

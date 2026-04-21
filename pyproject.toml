@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "django-referral-system"
-version = "0.3.1"
+version = "0.3.2"
 description = "A Django app for managing referral programs, promoters, referrals, and tracking referral performance with advanced features like commission setting, invitation management, and Wise payouts."
 readme = "README.md"
 license = { text = "MIT" }
@@ -43,7 +43,8 @@ dependencies = [
     "numpy>=2.1,<2.3; python_version >= '3.13'",
     "pandas>=2.0,<2.2; python_version < '3.12'",
     "pandas>=2.2.3,<3.0; python_version >= '3.12'",
-    "pydantic>=2.0,<2.11",
+    "pydantic>=2.0,<2.11; python_version < '3.14'",
+    "pydantic>=2.11,<3.0; python_version >= '3.14'",
     "python-dotenv>=1.0,<1.1",
 ]
 
