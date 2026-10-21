@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-10-21
+
 ### Fixed
 - Commissions, refunds and payouts no longer drop cents: 144.00 at 7.5% is now 10.80, not 10 ([#6](https://github.com/soldatov-ss/django-referral-system/issues/6)). Amounts are still in major currency units and are rounded down to the cent.
 
