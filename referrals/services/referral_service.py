@@ -1,5 +1,6 @@
 from collections import defaultdict
 from datetime import datetime, timedelta
+from decimal import Decimal
 import hashlib
 import logging
 from typing import Optional
@@ -94,7 +95,7 @@ class ReferralService:
         return serializer.data
 
     @staticmethod
-    def aggregate_earnings_by_day(earnings: list[dict]) -> dict[str, int]:
+    def aggregate_earnings_by_day(earnings: list[dict]) -> dict[str, Decimal]:
         """
         Aggregates earnings by the day of the week.
 
@@ -104,14 +105,15 @@ class ReferralService:
             earnings (list[dict]): A list of earnings with their creation dates.
 
         Returns:
-            dict[str, int]: A dictionary mapping each day of the week to the total earnings for that day.
+            dict[str, Decimal]: A dictionary mapping each day of the week to the total earnings for that day.
         """
-        earnings_by_day = defaultdict(int)
+        earnings_by_day = defaultdict(Decimal)
 
         for earning in earnings:
             created_at = datetime.strptime(earning["created"], "%Y-%m-%dT%H:%M:%S.%fZ")
             day_of_week = created_at.strftime("%a")
-            earnings_by_day[day_of_week] += earning["amount"]
+            # serialized amounts are decimal strings, e.g. "10.80"
+            earnings_by_day[day_of_week] += Decimal(earning["amount"])
         return earnings_by_day
 
     @staticmethod
@@ -131,7 +133,7 @@ class ReferralService:
         today = timezone.now()
         last_7_days = [(today - timedelta(days=i)).strftime("%a") for i in range(6, -1, -1)]
         earnings_by_day = ReferralService.aggregate_earnings_by_day(earnings)
-        statistics = [{"day": day[:2], "value": earnings_by_day.get(day, 0)} for day in last_7_days]
+        statistics = [{"day": day[:2], "value": str(earnings_by_day.get(day, Decimal("0.00")))} for day in last_7_days]
         return statistics
 
     @staticmethod

@@ -55,8 +55,8 @@ class ReferralSerializer(CamelCaseSerializer):
     def get_commission_amount(self, obj):
         commission = promoter_commission_repository.get_referral_positive_commission(obj)
         if commission:
-            return commission.amount
-        return 0
+            return None if commission.amount is None else str(commission.amount)
+        return "0.00"
 
     def get_commission_status(self, obj):
         commission = promoter_commission_repository.get_referral_positive_commission(obj)
@@ -74,6 +74,9 @@ class PayoutMethodSerializer(CamelCaseSerializer):
 class PromoterSerializer(CamelCaseSerializer):
     active_payout_method = PayoutMethodSerializer()
     commission_rate = serializers.SerializerMethodField()
+    current_balance = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    total_earned = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    total_paid = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
 
     class Meta:
         model = Promoter
