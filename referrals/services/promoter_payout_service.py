@@ -1,6 +1,5 @@
-from decimal import Decimal
+from decimal import ROUND_FLOOR, Decimal
 import logging
-import math
 from typing import Optional
 
 import pandas as pd
@@ -18,6 +17,8 @@ from referrals.repositories import (
 )
 
 logger = logging.getLogger(__name__)
+
+CENT = Decimal("0.01")
 
 
 class PromoterPayoutDataRow(BaseModel):
@@ -125,30 +126,31 @@ class PromoterPayoutService:
         return commission
 
     @staticmethod
-    def calculate_commission_amount(amount_paid: int, referral_commission_rate: Decimal) -> float:
+    def calculate_commission_amount(amount_paid: int, referral_commission_rate: Decimal) -> Decimal:
         """
         Calculates the commission amount based on the payment amount and referral commission rate.
 
         Args:
             amount_paid (int): The amount paid by the user in cents.
-            referral_commission_rate (Decimal): The commission rate associated with the referral.
+            referral_commission_rate (Decimal): The commission rate associated with the referral, as a percentage.
 
         Returns:
-            float: The calculated commission amount.
+            Decimal: The commission in major currency units, rounded down to the cent.
         """
-        commission_rate = referral_commission_rate / 100
-        price = amount_paid / 100
+        # str() so a float rate (e.g. 7.3) doesn't bring binary noise into the Decimal math
+        commission_rate = Decimal(str(referral_commission_rate)) / 100
+        price = Decimal(amount_paid) / 100
 
-        return math.floor(Decimal(price) * commission_rate)
+        return (price * commission_rate).quantize(CENT, rounding=ROUND_FLOOR)
 
     @staticmethod
-    def create_payout(promoter: Promoter, amount: float, payout_method: str):
+    def create_payout(promoter: Promoter, amount: Decimal, payout_method: str):
         """
         Creates a payout record for a promoter and marks their pending commissions as paid.
 
         Args:
             promoter (Promoter): The promoter receiving the payout.
-            amount (float): The payout amount.
+            amount (Decimal): The payout amount in major currency units.
             payout_method (str): The method used for the payout (e.g ., 'wise', 'crypto').
 
         Returns:
@@ -185,7 +187,9 @@ class PromoterPayoutService:
             raise ViewException(f"No commission found for referral with id {referral.id}.", status_code=404)
 
         commission_paid = referral_commission.amount
-        commission_refund_amount = -math.floor(commission_paid * amount_refunded / amount_paid)
+        commission_refund_amount = -(commission_paid * amount_refunded / amount_paid).quantize(
+            CENT, rounding=ROUND_FLOOR
+        )
 
         commission = PromoterCommission(
             promoter=referral.promoter,

@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+- Commissions, refunds and payouts no longer drop cents: 144.00 at 7.5% is now 10.80, not 10 ([#6](https://github.com/soldatov-ss/django-referral-system/issues/6)). Amounts are still in major currency units and are rounded down to the cent.
+
+### Changed
+- **Breaking:** `PromoterCommission.amount` and `PromoterPayout.amount` are now `DecimalField(max_digits=12, decimal_places=2)` instead of `IntegerField`. Run `migrate` (migration `0003`); existing values are kept as-is (`30` becomes `30.00`).
+- **Breaking:** the API now returns money as decimal strings instead of integers: `currentBalance`, `totalEarned`, `totalPaid`, `commissionAmount`, payout and commission `amount`, and recent-earnings `value` (e.g. `"10.80"`).
+- Wise payout CSV `amount` now includes cents (e.g. `10.85`).
+
 ## [0.3.2] - 2026-04-21
 
 ### Added

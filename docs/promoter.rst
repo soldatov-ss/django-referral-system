@@ -27,9 +27,9 @@ Example response:
       "user": 1,
       "referralToken": "6B86B273FF",
       "referralLink": "http://localhost:8000/?ref=6B86B273FF",
-      "currentBalance": 0,
-      "totalEarned": 0,
-      "totalPaid": 0,
+      "currentBalance": "0.00",
+      "totalEarned": "0.00",
+      "totalPaid": "0.00",
       "created": "2024-08-24T12:12:03.374694Z",
       "updated": "2024-09-08T09:11:15.032367Z",
       "linkClicked": 0,
@@ -88,9 +88,9 @@ Example response:
         "method": "wise",
         "paymentAddress": "example@gmail.com"
       },
-      "currentBalance": 0,
-      "totalEarned": 0,
-      "totalPaid": 0,
+      "currentBalance": "0.00",
+      "totalEarned": "0.00",
+      "totalPaid": "0.00",
       "created": "2024-08-24T12:12:03.374694Z",
       "updated": "2024-09-08T09:11:15.032367Z",
       "linkClicked": 0,
@@ -120,31 +120,31 @@ Example response:
     [
         {
             "day": "Mon",
-            "value": 50
+            "value": "50.00"
         },
         {
             "day": "Tue",
-            "value": 0
+            "value": "0.00"
         },
         {
             "day": "Wed",
-            "value": 30
+            "value": "30.00"
         },
         {
             "day": "Thu",
-            "value": 70
+            "value": "70.00"
         },
         {
             "day": "Fri",
-            "value": 20
+            "value": "20.00"
         },
         {
             "day": "Sat",
-            "value": 0
+            "value": "0.00"
         },
         {
             "day": "Sun",
-            "value": 10
+            "value": "10.00"
         }
     ]
 
@@ -201,7 +201,7 @@ Example response:
           "status": "signup",
           "invitationMethod": "email",
           "commissionRate": "15.00",
-          "commissionAmount": 0,
+          "commissionAmount": "0.00",
           "commissionStatus": null
         }
       ]
@@ -227,12 +227,12 @@ Example response:
         {
             "id": 1,
             "created": "2024-08-30T10:00:00Z",
-            "amount": 100
+            "amount": "100.00"
         },
         {
             "id": 2,
             "created": "2024-08-25T15:30:00Z",
-            "amount": 50
+            "amount": "50.00"
         }
     ]
 
@@ -266,9 +266,9 @@ Example response:
         "method": "wise",
         "paymentAddress": "example@gmail.com"
       },
-      "currentBalance": 0,
-      "totalEarned": 0,
-      "totalPaid": 0,
+      "currentBalance": "0.00",
+      "totalEarned": "0.00",
+      "totalPaid": "0.00",
       "created": "2024-08-24T12:12:03.374694Z",
       "updated": "2024-09-08T09:54:46.883465Z",
       "linkClicked": 1,

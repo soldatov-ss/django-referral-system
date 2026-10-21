@@ -1,7 +1,7 @@
 import asyncio
+import io
 from datetime import datetime, timedelta
 from decimal import Decimal
-import math
 import sys
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
@@ -241,8 +241,8 @@ class ReferralProgramViewSetTestCase(APITestCase):
         self.assertIsInstance(response.data, list)
         self.assertEqual(len(response.data), 7)
 
-        total_earnings = sum(item["value"] for item in response.data)
-        self.assertEqual(total_earnings, 300)
+        total_earnings = sum(Decimal(item["value"]) for item in response.data)
+        self.assertEqual(total_earnings, Decimal("300.00"))
 
     def test_promoter_recent_earnings_no_data(self):
         url = reverse("referrals-promoter-recent-earnings")
@@ -254,7 +254,7 @@ class ReferralProgramViewSetTestCase(APITestCase):
 
         # Check that all values are 0 when there's no data
         for day_data in response.data:
-            self.assertEqual(day_data["value"], 0)
+            self.assertEqual(day_data["value"], "0.00")
 
     def test_promoter_payment_history(self):
         payout1 = PromoterPayout.objects.create(
@@ -271,8 +271,8 @@ class ReferralProgramViewSetTestCase(APITestCase):
         self.assertIsInstance(response.data, list)
         self.assertEqual(len(response.data), 2)
 
-        self.assertEqual(response.data[0]["amount"], 200)
-        self.assertEqual(response.data[1]["amount"], 100)
+        self.assertEqual(response.data[0]["amount"], "200.00")
+        self.assertEqual(response.data[1]["amount"], "100.00")
 
     def test_promoter_payment_history_no_data(self):
         url = reverse("referrals-promoter-payment-history")
@@ -319,8 +319,8 @@ class ReferralServiceTestCase(TestCase):
 
         earnings = referral_service.get_user_earnings(self.user)
         self.assertEqual(len(earnings), 2)
-        self.assertEqual(earnings[0]["amount"], 100)
-        self.assertEqual(earnings[1]["amount"], 200)
+        self.assertEqual(earnings[0]["amount"], "100.00")
+        self.assertEqual(earnings[1]["amount"], "200.00")
 
     def test_aggregate_earnings_by_day(self):
         earnings = [
@@ -377,9 +377,9 @@ class ReferralServiceTestCase(TestCase):
         )
         self.referral.refresh_from_db()
 
-        expected_refund_amount = -math.floor(initial_commission.amount * amount_refunded / amount_paid)
-
-        self.assertEqual(result.amount, expected_refund_amount)
+        # commission 30.00 (150.00 at 20%), a third refunded
+        self.assertEqual(initial_commission.amount, Decimal("30.00"))
+        self.assertEqual(result.amount, Decimal("-10.00"))
         self.assertEqual(result.status, PromoterCommissionStatusChoices.REFUND)
         self.assertEqual(self.referral.status, ReferralStateChoices.REFUND)
 
@@ -854,7 +854,7 @@ class SerializerEdgeCaseTestCase(TestCase):
             promoter=self.promoter, referral=self.referral, amount=42, status=PromoterCommissionStatusChoices.PENDING
         )
         data = ReferralSerializer(self.referral).data
-        self.assertEqual(data["commissionAmount"], 42)
+        self.assertEqual(data["commissionAmount"], "42.00")
         self.assertEqual(data["commissionStatus"], PromoterCommissionStatusChoices.PENDING)
 
     def test_referral_serializer_get_email_fallback_when_user_has_no_email(self):
@@ -995,3 +995,98 @@ class ConfigTestCase(TestCase):
         cfg = Config()
         cfg.BASE_EMAIL = None
         self.assertIsNone(cfg.BASE_EMAIL)
+
+
+# ---------------------------------------------------------------------------
+# Money precision (issue #6): amounts are major currency units with cents
+# ---------------------------------------------------------------------------
+
+
+class MoneyPrecisionTestCase(APITestCase):
+    @classmethod
+    def setUpTestData(cls):
+        ReferralProgram.objects.create(name="cents_program", commission_rate=Decimal("7.50"), min_withdrawal_balance=10)
+        cls.user = User.objects.create_user(username="cents-promoter", email="cents@example.com", password="Pass123")
+        cls.user2 = User.objects.create_user(username="cents-buyer", email="buyer@example.com", password="Pass123")
+        cls.promoter = Promoter.objects.create(user=cls.user, referral_token="cents-token")
+        cls.referral = Referral.objects.create(
+            user=cls.user2, promoter=cls.promoter, status=ReferralStateChoices.SIGNUP
+        )
+
+    def purchase(self, amount_paid_cents):
+        referral_service.handle_purchase_subscription(self.user2, amount_paid_cents)
+        return PromoterCommission.objects.get(referral=self.referral, status=PromoterCommissionStatusChoices.PENDING)
+
+    def test_purchase_commission_keeps_cents(self):
+        # 144.00 at 7.5% = 10.80 (the example from issue #6)
+        self.assertEqual(self.purchase(14400).amount, Decimal("10.80"))
+
+    def test_purchase_commission_floors_to_the_cent(self):
+        # 99.99 at 7.5% = 7.49925
+        self.assertEqual(self.purchase(9999).amount, Decimal("7.49"))
+
+    def refund(self, amount_refunded_cents, amount_paid_cents):
+        return referral_service.handle_user_refund(
+            self.user2, amount_refunded=amount_refunded_cents, amount_paid=amount_paid_cents
+        )
+
+    def test_refund_keeps_cents(self):
+        self.purchase(14400)  # commission 10.80
+        refund = self.refund(4800, 14400)  # a third refunded
+        refund.refresh_from_db()
+        self.assertEqual(refund.amount, Decimal("-3.60"))
+
+    def test_refund_floors_to_the_cent(self):
+        self.purchase(14400)  # commission 10.80
+        # 10.80 * 20.57 / 144.00 = 1.54275; promoter keeps the fraction, as before
+        self.assertEqual(self.refund(2057, 14400).amount, Decimal("-1.54"))
+
+    def run_wise_payouts(self):
+        self.promoter.active_payout_method = PayoutMethod.objects.create(
+            method="wise", payment_address="cents@example.com"
+        )
+        self.promoter.save()
+        csv_string = promoter_payout_service.send_wise_csv_for_promoters_payouts()
+        return pd.read_csv(io.StringIO(csv_string), dtype=str) if csv_string else None
+
+    def test_wise_payout_pays_cents(self):
+        self.purchase(14400)  # commission 10.80
+        PromoterCommission.objects.create(promoter=self.promoter, referral=self.referral, amount=Decimal("0.05"))
+
+        rows = self.run_wise_payouts()
+
+        self.assertEqual(Decimal(rows.loc[0, "amount"]), Decimal("10.85"))
+        self.assertEqual(PromoterPayout.objects.get(promoter=self.promoter).amount, Decimal("10.85"))
+        self.assertEqual(Promoter.objects.get(pk=self.promoter.pk).current_balance, Decimal("0.00"))
+
+    def test_wise_payout_skips_balance_a_cent_below_minimum(self):
+        PromoterCommission.objects.create(promoter=self.promoter, referral=self.referral, amount=Decimal("9.99"))
+
+        self.assertIsNone(self.run_wise_payouts())
+        self.assertFalse(PromoterPayout.objects.exists())
+
+    def get_json(self, url_name):
+        self.client.force_authenticate(user=self.user)
+        response = self.client.get(reverse(url_name))
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        return response.json()
+
+    def test_api_returns_amounts_as_decimal_strings(self):
+        self.purchase(14400)  # commission 10.80
+        promoter = self.get_json("referrals-retrieve-promoter")
+        self.assertEqual(
+            (promoter["currentBalance"], promoter["totalEarned"], promoter["totalPaid"]), ("10.80", "10.80", "0.00")
+        )
+        self.assertEqual(self.get_json("referrals-list")["results"][0]["commissionAmount"], "10.80")
+        earnings = self.get_json("referrals-promoter-recent-earnings")
+        self.assertEqual([day["value"] for day in earnings], ["0.00"] * 6 + ["10.80"])
+
+        self.run_wise_payouts()
+        self.assertEqual([p["amount"] for p in self.get_json("referrals-promoter-payment-history")], ["10.80"])
+
+    def test_api_commission_amount_is_decimal_string_without_commission(self):
+        self.assertEqual(self.get_json("referrals-list")["results"][0]["commissionAmount"], "0.00")
+
+    def test_api_commission_amount_stays_null_for_null_amount(self):
+        PromoterCommission.objects.create(promoter=self.promoter, referral=self.referral, amount=None)
+        self.assertIsNone(self.get_json("referrals-list")["results"][0]["commissionAmount"])

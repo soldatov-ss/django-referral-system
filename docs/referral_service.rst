@@ -67,7 +67,7 @@ Example refund record:
 .. code-block:: python
 
     {
-        "amount": -5,  # negative value representing the refund
+        "amount": Decimal("-5.00"),  # negative value representing the refund
         "status": "refund",
         "invoice_external_id": 12345
     }

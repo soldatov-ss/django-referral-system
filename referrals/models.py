@@ -74,15 +74,15 @@ class Promoter(TimeStampedModel):
     )
 
     @cached_property
-    def total_earned(self) -> int:
-        return self.promoter_commission.aggregate(total=Sum("amount"))["total"] or 0
+    def total_earned(self) -> Decimal:
+        return self.promoter_commission.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
 
     @cached_property
-    def total_paid(self) -> int:
-        return self.promoter_payouts.aggregate(total=Sum("amount"))["total"] or 0
+    def total_paid(self) -> Decimal:
+        return self.promoter_payouts.aggregate(total=Sum("amount"))["total"] or Decimal("0.00")
 
     @cached_property
-    def current_balance(self) -> int:
+    def current_balance(self) -> Decimal:
         return self.total_earned - self.total_paid
 
     def __str__(self):
@@ -116,7 +116,7 @@ class Referral(TimeStampedModel):
 class PromoterCommission(TimeStampedModel):
     promoter = models.ForeignKey(Promoter, related_name="promoter_commission", on_delete=models.CASCADE)
     referral = models.ForeignKey(Referral, related_name="referral_commission", on_delete=models.CASCADE)
-    amount = models.IntegerField(null=True)
+    amount = models.DecimalField(max_digits=12, decimal_places=2, null=True)
     status = models.CharField(
         max_length=10, choices=PromoterCommissionStatusChoices.choices, default=PromoterCommissionStatusChoices.PENDING
     )
@@ -126,6 +126,6 @@ class PromoterCommission(TimeStampedModel):
 
 class PromoterPayout(TimeStampedModel):
     promoter = models.ForeignKey(Promoter, related_name="promoter_payouts", on_delete=models.CASCADE)
-    amount = models.IntegerField()
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
     payout_method = models.CharField(max_length=20, null=False, help_text="Payout method (e.g., wise, crypto, etc.)")
     tx_signature = models.CharField(max_length=255, null=True, blank=True)

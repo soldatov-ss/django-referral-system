@@ -30,6 +30,6 @@ Example response:
       "status": "signup",
       "invitationMethod": "email",
       "commissionRate": "15.00",
-      "commissionAmount": 0,
+      "commissionAmount": "0.00",
       "commissionStatus": null
     }
