@@ -10,7 +10,7 @@ on:
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     strategy:
       fail-fast: false
       matrix:
@@ -18,6 +18,8 @@ jobs:
           - python-version: "3.9"
             django-version: "4.2"
             coverage: false
+            # setup-python has no 3.9 build for ubuntu-latest (26.04)
+            os: ubuntu-24.04
           - python-version: "3.10"
             django-version: "4.2"
             coverage: false
